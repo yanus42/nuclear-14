@@ -1,0 +1,17 @@
+- type: entity
+  parent: N14WallDecorClock
+  id: ForgeWallClock
+  name: working wall clock
+  description: An old clock that still keeps time.
+  suffix: Working
+  components:
+  - type: WorldClock
+
+- type: entity
+  parent: N14GrandfatherClock
+  id: ForgeGrandfatherClock
+  name: working grandfather clock
+  description: An old pre-war clock that still keeps time.
+  suffix: Working
+  components:
+  - type: WorldClock
