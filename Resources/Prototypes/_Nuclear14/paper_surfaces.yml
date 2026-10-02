@@ -1,0 +1,28 @@
+# Sheet appearance is separate from newspaper templates and can be reused by other documents.
+- type: paperSurface
+  id: N14WornNewsprint
+  baseColor: "#DDDFD9"
+  grain: 0.018
+  discoloration: 0.035
+  edgeWear: 0.12
+  creaseStrength: 0.09
+  creases: 2
+  smudges: 7
+  edgeRoughness: 0.006
+  cornerWear: 0.018
+  wrinkles: 6
+  fiberCount: 1600
+  fiberStrength: 0.09
+  impurityCount: 650
+  impurityStrength: 0.12
+
+# Rougher unbleached stock for leaflets and other inexpensive documents.
+- type: paperSurface
+  id: N14RecycledPaper
+  baseColor: "#CECFC3"
+  grain: 0.025
+  discoloration: 0.045
+  fiberCount: 3000
+  fiberStrength: 0.13
+  impurityCount: 1100
+  impurityStrength: 0.16

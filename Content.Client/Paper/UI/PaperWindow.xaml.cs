@@ -49,6 +49,12 @@ namespace Content.Client.Paper.UI
 
         public event Action<string>? OnSaved;
 
+        public void SetSurface(Content.Shared._Forge.Paper.PaperSurfaceAppearance? surface)
+        {
+            PaperBackground.SetSurface(surface);
+            if (surface != null) PaperBackground.ModulateSelfOverride = Color.White;
+        }
+
         // Forge-Change: language dropdown while writing
         private readonly List<string> _languageIds = new();
         private string? _pickedLanguage;

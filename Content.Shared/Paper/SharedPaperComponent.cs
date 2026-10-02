@@ -1,6 +1,7 @@
 using Robust.Shared.Audio;
 using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
+using Content.Shared._Forge.Paper;
 
 namespace Content.Shared.Paper;
 
@@ -19,12 +20,14 @@ public abstract partial class SharedPaperComponent : Component
         public readonly string Text;
         public readonly List<StampDisplayInfo> StampedBy;
         public readonly PaperAction Mode;
+        public readonly PaperSurfaceAppearance? Surface;
 
-        public PaperBoundUserInterfaceState(string text, List<StampDisplayInfo> stampedBy, PaperAction mode = PaperAction.Read)
+        public PaperBoundUserInterfaceState(string text, List<StampDisplayInfo> stampedBy, PaperAction mode = PaperAction.Read, PaperSurfaceAppearance? surface = null)
         {
             Text = text;
             StampedBy = stampedBy;
             Mode = mode;
+            Surface = surface;
         }
     }
 

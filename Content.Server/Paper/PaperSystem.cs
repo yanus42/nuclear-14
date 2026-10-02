@@ -254,7 +254,8 @@ namespace Content.Server.Paper
             if (!Resolve(uid, ref paperComp))
                 return;
 
-            _uiSystem.SetUiState(uid, PaperUiKey.Key, new PaperBoundUserInterfaceState(paperComp.Content, paperComp.StampedBy, paperComp.Mode));
+            _uiSystem.SetUiState(uid, PaperUiKey.Key, new PaperBoundUserInterfaceState(paperComp.Content, paperComp.StampedBy, paperComp.Mode,
+                TryComp<Content.Shared._Forge.Paper.PaperSurfaceComponent>(uid, out var surface) ? surface.Appearance.Clone() : null));
         }
     }
 

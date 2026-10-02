@@ -47,6 +47,7 @@ public sealed class PaperBoundUserInterface : BoundUserInterface
     {
         base.UpdateState(state);
         var paperState = (PaperBoundUserInterfaceState) state;
+        _window?.SetSurface(paperState.Surface);
         _mode = paperState.Mode;
         var visuals = EntMan.System<PaperLanguageVisualsSystem>();
 
