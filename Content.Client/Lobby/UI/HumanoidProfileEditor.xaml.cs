@@ -325,6 +325,9 @@ namespace Content.Client.Lobby.UI
             #endregion
 
             #region Hair
+            // #Forge-Change: hover changes only the rendered dummy, never Profile.
+            HairStylePicker.OnTryStyle += id => TryHairStyle(id, false);
+            FacialHairPicker.OnTryStyle += id => TryHairStyle(id, true);
 
             HairStylePicker.OnMarkingSelect += newStyle =>
             {
@@ -393,48 +396,7 @@ namespace Content.Client.Lobby.UI
                 ReloadProfilePreview();
             };
 
-            HairStylePicker.OnSlotAdd += delegate()
-            {
-                if (Profile is null)
-                    return;
-
-                var hair = _markingManager.MarkingsByCategoryAndSpecies(MarkingCategories.Hair, Profile.Species).Keys
-                    .FirstOrDefault();
-
-                if (string.IsNullOrEmpty(hair))
-                    return;
-
-                Profile = Profile.WithCharacterAppearance(
-                    Profile.Appearance.WithHairStyleName(hair)
-                );
-
-                UpdateHairPickers();
-                UpdateCMarkingsHair();
-                IsDirty = true;
-                ReloadProfilePreview();
-            };
-
-            FacialHairPicker.OnSlotAdd += delegate()
-            {
-                if (Profile is null)
-                    return;
-
-                var hair = _markingManager.MarkingsByCategoryAndSpecies(MarkingCategories.FacialHair, Profile.Species).Keys
-                    .FirstOrDefault();
-
-                if (string.IsNullOrEmpty(hair))
-                    return;
-
-                Profile = Profile.WithCharacterAppearance(
-                    Profile.Appearance.WithFacialHairStyleName(hair)
-                );
-
-                UpdateHairPickers();
-                UpdateCMarkingsFacialHair();
-                IsDirty = true;
-                ReloadProfilePreview();
-            };
-
+            // #Forge-Change: tile selection replaces the obsolete add-slot callbacks.
             #endregion Hair
 
             #region SpawnPriority
@@ -542,6 +504,7 @@ namespace Content.Client.Lobby.UI
             #endregion
 
             #region Markings
+            ConfigureForgeMarkingTiles(); // #Forge-Change
 
             MarkingsTab.Orphan();
             CTabContainer.AddTab(MarkingsTab, Loc.GetString("humanoid-profile-editor-markings-tab"));
@@ -574,8 +537,8 @@ namespace Content.Client.Lobby.UI
 
             #endregion Left
 
-            ShowClothes.OnToggled += _ => { SetProfile(Profile, CharacterSlot); };
-            ShowLoadouts.OnToggled += _ => { SetProfile(Profile, CharacterSlot); };
+            ShowClothes.OnToggled += args => SetForgeClothingVisibility(args.Pressed); // #Forge-Change: preview only, preserve dirty state
+            ShowLoadouts.OnToggled += _ => { ReloadPreview(); }; // #Forge-Change: preview only, preserve dirty state
 
             SpeciesInfoButton.OnPressed += OnSpeciesInfoButtonPressed;
             UpdateSpeciesGuidebookIcon();
@@ -778,8 +741,9 @@ namespace Content.Client.Lobby.UI
             if (Profile == null || !_prototypeManager.HasIndex<SpeciesPrototype>(Profile.Species))
                 return;
 
-            PreviewDummy = _controller.LoadProfileEntity(Profile, ShowClothes.Pressed, ShowLoadouts.Pressed);
+            PreviewDummy = _controller.LoadProfileEntity(Profile, ForgePreviewJobClothes, ForgePreviewLoadouts);
             SpriteView.SetEntity(PreviewDummy);
+            UpdateForgeHairTiles(); // #Forge-Change
         }
 
         /// Reloads the dummy entity's clothes for preview
@@ -790,10 +754,11 @@ namespace Content.Client.Lobby.UI
 
             _controller.RemoveDummyClothes(PreviewDummy);
             var job = _controller.GetPreferredJob(Profile);
-            if (ShowClothes.Pressed)
+            if (ForgePreviewJobClothes) // #Forge-Change: shared clothing visibility, including loadout armor
                 _controller.GiveDummyJobClothes(PreviewDummy, job, Profile);
-            if (ShowLoadouts.Pressed)
+            if (ForgePreviewLoadouts) // #Forge-Change: shared clothing visibility, including loadout armor
                 _controller.GiveDummyLoadout(PreviewDummy, job, Profile);
+            UpdateForgeMarkingTiles(); // #Forge-Change: reflect equipment changes in cards
         }
 
         /// Resets the profile to the defaults
@@ -807,6 +772,8 @@ namespace Content.Client.Lobby.UI
         /// Sets the editor to the specified profile with the specified slot
         public void SetProfile(HumanoidCharacterProfile? profile, int? slot)
         {
+            // #Forge-Change: a pre-add color is local to the current character/species.
+            if (CharacterSlot != slot || Profile?.Species != profile?.Species) Markings.ResetForgeDraftColor();
             Profile = profile?.Clone();
             CharacterSlot = slot;
             IsDirty = false;
@@ -860,6 +827,8 @@ namespace Content.Client.Lobby.UI
                 appearanceSystem.SetLayersVisibility(PreviewDummy, hiddenLayers, false, humanoid: humanoid);
             }
 
+            // #Forge-Change: refresh tile context after appearance changes.
+            UpdateForgeHairTiles();
             SetPreviewRotation(_previewRotation);
             TraitsTabs.UpdateTabMerging();
             LoadoutsTabs.UpdateTabMerging();
@@ -1307,6 +1276,7 @@ namespace Content.Client.Lobby.UI
 
         protected override void Dispose(bool disposing)
         {
+            _forgeClosing = true; // #Forge-Change: suppress preview callbacks during child disposal
             base.Dispose(disposing);
             if (!disposing)
                 return;
@@ -1772,33 +1742,11 @@ namespace Content.Client.Lobby.UI
             SpriteView.InvalidateMeasure();
         }
 
+        // #Forge-Change: tile pickers receive the complete appearance context.
         private void UpdateHairPickers()
         {
-            if (Profile == null)
-                return;
-
-            var hairMarking = Profile.Appearance.HairStyleId switch
-            {
-                HairStyles.DefaultHairStyle => new List<Marking>(),
-                _ => new() { new(Profile.Appearance.HairStyleId, new List<Color>() { Profile.Appearance.HairColor }) },
-            };
-
-            var facialHairMarking = Profile.Appearance.FacialHairStyleId switch
-            {
-                HairStyles.DefaultFacialHairStyle => new List<Marking>(),
-                _ => new() { new(Profile.Appearance.FacialHairStyleId, new List<Color>() { Profile.Appearance.FacialHairColor }) },
-            };
-
-            HairStylePicker.UpdateData(
-                hairMarking,
-                Profile.Species,
-                1);
-            FacialHairPicker.UpdateData(
-                facialHairMarking,
-                Profile.Species,
-                1);
+            UpdateForgeHairTiles();
         }
-
         private void UpdateCMarkingsHair()
         {
             if (Profile == null)
@@ -1872,6 +1820,7 @@ namespace Content.Client.Lobby.UI
         private void SetPreviewRotation(Direction direction)
         {
             SpriteView.OverrideDirection = (Direction) ((int) direction % 4 * 2);
+            Markings.SetForgePreviewDirection(SpriteView.OverrideDirection.Value); // #Forge-Change
         }
 
         private void RandomizeName()
@@ -2494,7 +2443,7 @@ namespace Content.Client.Lobby.UI
                 {
                     var first = _loadoutPreferences.First(lps => lps.Loadout.ID == loadout.ID);
                     var prof = Profile?.LoadoutPreferences.FirstOrDefault(lp => lp.LoadoutName == loadout.ID);
-                    first.Preference = new(loadout.ID, prof?.CustomName, prof?.CustomDescription, prof?.CustomColorTint, prof?.CustomHeirloom);
+                    first.Preference = new(loadout.ID, prof?.CustomName, prof?.CustomDescription, prof?.CustomColorTint, prof?.CustomHeirloom) { Selected = prof?.Selected ?? false }; // #Forge-Change: preserve loaded selection
                     UpdateSelector(first, usable);
                     continue;
                 }
@@ -2616,11 +2565,11 @@ namespace Content.Client.Lobby.UI
                 _loadoutPreferences.Add(selector);
                 selector.PreferenceChanged += preference =>
                 {
-                    // Make sure they have enough loadout points
-                    var selected = preference.Selected
-                        ? CheckPoints(-selector.Loadout.Cost, preference.Selected)
-                        : CheckPoints(selector.Loadout.Cost, preference.Selected);
-
+                    // #Forge-Change: charge points only for an unselected -> selected transition.
+                    var wasSelected = Profile?.LoadoutPreferences.Any(p =>
+                        p.LoadoutName == selector.Loadout.ID && p.Selected) == true;
+                    var selected = Content.Client._Forge.Humanoid.LoadoutSelection.Resolve(
+                        wasSelected, preference.Selected, selector.Loadout.Cost, LoadoutPointsBar.Value);
                     // Update Preferences
                     Profile = Profile?.WithLoadoutPreference(
                         selector.Loadout.ID,
@@ -2631,15 +2580,12 @@ namespace Content.Client.Lobby.UI
                         preference.CustomHeirloom);
                     IsDirty = true;
                     UpdateLoadoutPreferences();
-                    SetProfile(Profile, CharacterSlot);
+                    ReloadClothes(); // #Forge-Change: update outfit without reopening/resetting the profile
+                    SetDirty();
                 };
             }
 
-            bool CheckPoints(int points, bool preference)
-            {
-                var temp = LoadoutPointsBar.Value + points;
-                return preference ? !(temp < 0) : temp < 0;
-            }
+            // #Forge-Change: loadout budget transitions are handled by LoadoutSelection.
         }
 
         #endregion

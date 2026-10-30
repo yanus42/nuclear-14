@@ -45,14 +45,24 @@ public sealed partial class LoadoutPreferenceSelector : Control
         get => _preference;
         set
         {
-            _preference = value;
-            NameEdit.Text = value.CustomName ?? "";
-            DescriptionEdit.TextRope = new Rope.Leaf(value.CustomDescription ?? "");
-            ColorEdit.Color = Color.FromHex(value.CustomColorTint, Color.White);
-            if (value.CustomColorTint != null)
-                UpdatePaint(new(DummyEntityUid, _entityManager.GetComponent<PaintedComponent>(DummyEntityUid)), _entityManager);
-            HeirloomButton.Pressed = value.CustomHeirloom ?? false;
-            PreferenceButton.Pressed = value.Selected;
+            _forgeHydratingPreference = true; // #Forge-Change: hydration is not a user edit
+            try
+            {
+                _preference = Content.Client._Forge.Humanoid.LoadoutPreferenceDraft.Copy(value); // #Forge-Change: detached edit draft
+                NameEdit.Text = value.CustomName ?? "";
+                DescriptionEdit.TextRope = new Rope.Leaf(value.CustomDescription ?? "");
+                SpecialColorTintToggle.Pressed = value.CustomColorTint != null; // #Forge-Change
+                ColorEdit.Color = Color.FromHex(value.CustomColorTint, Color.White);
+                if (value.CustomColorTint != null)
+                    UpdatePaint(new(DummyEntityUid, _entityManager.GetComponent<PaintedComponent>(DummyEntityUid)), _entityManager);
+                HeirloomButton.Pressed = value.CustomHeirloom ?? false;
+                PreferenceButton.Pressed = value.Selected;
+                }
+            finally
+            {
+                _forgeHydratingPreference = false;
+            }
+
         }
     }
 
@@ -208,16 +218,20 @@ public sealed partial class LoadoutPreferenceSelector : Control
         });
         PreferenceButton.OnToggled += args =>
         {
+            if (_forgeHydratingPreference) return; // #Forge-Change
             _preference.Selected = args.Pressed;
             PreferenceChanged?.Invoke(Preference);
         };
         HeirloomButton.OnToggled += args =>
         {
+            if (_forgeHydratingPreference) return; // #Forge-Change
             _preference.CustomHeirloom = args.Pressed ? true : null;
             PreferenceChanged?.Invoke(Preference);
         };
         SaveButton.OnPressed += _ =>
         {
+            _preference.CustomName = string.IsNullOrEmpty(NameEdit.Text) ? null : NameEdit.Text; // #Forge-Change
+            _preference.CustomDescription = string.IsNullOrEmpty(Rope.Collapse(DescriptionEdit.TextRope)) ? null : Rope.Collapse(DescriptionEdit.TextRope);
             _preference.CustomColorTint = SpecialColorTintToggle.Pressed ? ColorEdit.Color.ToHex() : null;
             _preference.Selected = PreferenceButton.Pressed;
             PreferenceChanged?.Invoke(Preference);
@@ -232,10 +246,10 @@ public sealed partial class LoadoutPreferenceSelector : Control
             ColorEdit.Visible = args.Pressed;
         ColorEdit.OnColorChanged += _ =>
         {
+            if (_forgeHydratingPreference) return; // #Forge-Change: keep saved tint during hydration
             _preference.CustomColorTint = SpecialColorTintToggle.Pressed ? ColorEdit.Color.ToHex() : null;
             UpdatePaint(new Entity<PaintedComponent>(dummyLoadoutItem, paint), entityManager);
         };
-
         NameEdit.PlaceHolder = loadoutName;
         DescriptionEdit.Placeholder = new Rope.Leaf(Loc.GetString(loadoutDesc));
 

@@ -302,7 +302,13 @@ public sealed class LobbyUIController : UIController, IOnStateEntered<LobbyState
     /// Applies loadouts to the dummy.
     public void GiveDummyLoadout(EntityUid dummy, JobPrototype job, HumanoidCharacterProfile profile)
     {
-        _loadouts.ApplyCharacterLoadout(dummy, job, profile, _jobRequirements.GetRawPlayTimeTrackers(), _jobRequirements.IsWhitelisted(), out _);
+        var (unequipped, _) = _loadouts.ApplyCharacterLoadout(dummy, job, profile,
+            _jobRequirements.GetRawPlayTimeTrackers(), _jobRequirements.IsWhitelisted(), out _);
+        // #Forge-Change: preview-only items that could not be worn are not children of
+        // the dummy. Delete them now so catalogue rebuilds do not leak nullspace entities.
+        foreach (var item in unequipped)
+            if (EntityManager.EntityExists(item))
+                EntityManager.DeleteEntity(item);
     }
 
     /// Loads the profile onto a dummy entity

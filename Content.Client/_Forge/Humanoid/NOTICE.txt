@@ -1,0 +1,12 @@
+TileFlowContainer.cs is adapted from Goob-Station/Goob-Station:
+https://github.com/Goob-Station/Goob-Station/pull/7455
+Ref: 039d51753294bcd9c030db57707b3ec3362ea8c8
+Original: Content.Goobstation.UIKit/UserInterface/Lobby/TileFlowContainer.cs
+PR author: Aidenkrz; changelog attribution: Durk.
+SPDX-License-Identifier: AGPL-3.0-or-later
+The source file has no individual license header; the repository README specifies
+AGPL-3.0-or-later for code. Full license is preserved in GOOB-LICENSE.txt.
+Changes: namespace only; Forge uses the existing client UI styling.
+HairTilePicker.cs is a new Forge implementation of the limited hair tile workflow.
+Styling reference: https://github.com/Goob-Station/Goob-Station/pull/7463
+No Goob artwork, prototypes, fonts or lobby UI are imported.

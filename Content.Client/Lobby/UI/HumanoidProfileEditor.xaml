@@ -1,6 +1,7 @@
 <!-- Forge-Change-Start -->
 <BoxContainer xmlns="https://spacestation14.io"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:forgeHair="clr-namespace:Content.Client._Forge.Humanoid"
     xmlns:humanoid="clr-namespace:Content.Client.Humanoid"
     xmlns:cc="clr-namespace:Content.Client.Administration.UI.CustomControls"
     xmlns:ui="clr-namespace:Content.Client.UserInterface.Controls"
@@ -137,11 +138,11 @@
                             <Slider HorizontalExpand="True" Name="Skin" MinValue="0" MaxValue="100" Value="20" />
                             <BoxContainer Name="RgbSkinColorContainer" Visible="False" Orientation="Vertical" HorizontalExpand="True"></BoxContainer>
                         </BoxContainer>
-                        <!-- Hair -->
-                        <BoxContainer Margin="10" Orientation="Horizontal">
-                            <humanoid:SingleMarkingPicker Name="HairStylePicker" Category="Hair" />
-                            <humanoid:SingleMarkingPicker Name="FacialHairPicker" Category="FacialHair" />
-                        </BoxContainer>
+                        <!-- #Forge-Change: shared hair tile pickers -->
+                        <TabContainer Margin="10" HorizontalExpand="True">
+                            <forgeHair:HairTilePicker Name="HairStylePicker" Category="Hair" />
+                            <forgeHair:HairTilePicker Name="FacialHairPicker" Category="FacialHair" />
+                        </TabContainer>
                         <!-- Eyes -->
                         <BoxContainer Margin="10" Orientation="Vertical">
                             <Label Text="{Loc 'humanoid-profile-editor-eyes-label'}" />

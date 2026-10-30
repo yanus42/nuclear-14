@@ -140,6 +140,7 @@ public sealed partial class MarkingPicker : Control
         CMarkingRankDown.OnPressed += _ => SwapMarkingDown();
 
         CMarkingSearch.OnTextChanged += args => Populate(args.Text);
+        InitializeForgeTiles(); // #Forge-Change
     }
 
     private void SetupCategoryButtons()
@@ -213,11 +214,11 @@ public sealed partial class MarkingPicker : Control
         var sortedMarkings = GetMarkings(_selectedMarkingCategory).Values.Where(m =>
             m.ID.ToLower().Contains(filter.ToLower()) ||
             GetMarkingName(m).ToLower().Contains(filter.ToLower())
-        ).OrderBy(p => Loc.GetString(GetMarkingName(p)));
+        ).OrderBy(GetMarkingName); // #Forge-Change: name is already localized
 
         foreach (var marking in sortedMarkings)
         {
-            if (_currentMarkings.TryGetMarking(_selectedMarkingCategory, marking.ID, out _))
+            if (_forgeProfile == null && _currentMarkings.TryGetMarking(_selectedMarkingCategory, marking.ID, out _)) // #Forge-Change: selected tiles stay visible
             {
                 continue;
             }
@@ -226,6 +227,7 @@ public sealed partial class MarkingPicker : Control
             item.Metadata = marking;
         }
 
+        RefreshForgeTiles(); // #Forge-Change
         CMarkingPoints.Visible = _currentMarkings.PointsLeft(_selectedMarkingCategory) != -1;
     }
 
@@ -233,6 +235,7 @@ public sealed partial class MarkingPicker : Control
     // valid to add to the marking list.
     public void PopulateUsed()
     {
+        var forgeSelected = (_selectedMarking?.Metadata as MarkingPrototype)?.ID; // #Forge-Change
         CMarkingsUsed.Clear();
         CMarkingColors.Visible = false;
         _selectedMarking = null;
@@ -243,7 +246,7 @@ public sealed partial class MarkingPicker : Control
         }
 
         // walk backwards through the list for visual purposes
-        foreach (var marking in _currentMarkings.GetReverseEnumerator(_selectedMarkingCategory))
+        foreach (var marking in ForgeUsedMarkings()) // #Forge-Change: all selected categories in profile editor
         {
             if (!_markingManager.TryGetMarking(marking, out var newMarking))
             {
@@ -255,7 +258,7 @@ public sealed partial class MarkingPicker : Control
 
             var _item = new ItemList.Item(CMarkingsUsed)
             {
-                Text = text,
+                Text = _forgeProfile == null ? text : Loc.GetString("forge-marking-used-entry", ("category", Loc.GetString($"markings-category-{newMarking.MarkingCategory}")), ("name", text)), // #Forge-Change
                 Icon = newMarking.Sprites[0].Frame0(),
                 Selectable = true,
                 Metadata = newMarking,
@@ -265,12 +268,14 @@ public sealed partial class MarkingPicker : Control
             CMarkingsUsed.Add(_item);
         }
 
+        RestoreForgeUsedSelection(forgeSelected); // #Forge-Change: retain color controls
         // since all the points have been processed, update the points visually
         UpdatePoints();
     }
 
     private void SwapMarkingUp()
     {
+        if (_forgeProfile != null) { ShiftForgeUsed(-1); return; } // #Forge-Change
         if (_selectedMarking == null)
         {
             return;
@@ -285,6 +290,7 @@ public sealed partial class MarkingPicker : Control
 
     private void SwapMarkingDown()
     {
+        if (_forgeProfile != null) { ShiftForgeUsed(1); return; } // #Forge-Change
         if (_selectedMarking == null)
         {
             return;
@@ -378,17 +384,21 @@ public sealed partial class MarkingPicker : Control
     {
         CMarkingCategoryButton.SelectId(category.Id);
         _selectedMarkingCategory = _markingCategories[category.Id];
+        ClearForgeColorSelection(); // #Forge-Change: one active color context
         Populate(CMarkingSearch.Text);
         PopulateUsed();
         UpdatePoints();
     }
 
     // TODO: This should be using ColorSelectorSliders once that's merged, so
-    private void OnUsedMarkingSelected(ItemList.ItemListSelectedEventArgs item)
+    private void OnUsedMarkingSelected(ItemList.ItemListSelectedEventArgs item) => SelectForgeUsedIndex(item.ItemIndex); // #Forge-Change
+
+    private void SelectForgeUsedIndex(int selectedIndex)
     {
-        _selectedMarking = CMarkingsUsed[item.ItemIndex];
+        _selectedMarking = CMarkingsUsed[selectedIndex];
         var prototype = (MarkingPrototype) _selectedMarking.Metadata!;
 
+        if (_forgeProfile != null) { ActivateForgeUsedColor(prototype); return; } // #Forge-Change: unified color panel
         if (prototype.ForcedColoring)
         {
             CMarkingColors.Visible = false;
@@ -415,9 +425,9 @@ public sealed partial class MarkingPicker : Control
             colorContainer.AddChild(new Label { Text = $"{stateNames[i]} color:" });
             colorContainer.AddChild(colorSelector);
 
-            var listing = _currentMarkings.Markings[_selectedMarkingCategory];
+            var listing = _currentMarkings.Markings[prototype.MarkingCategory]; // #Forge-Change
 
-            var color = listing[listing.Count - 1 - item.ItemIndex].MarkingColors[i];
+            var color = listing[_currentMarkings.FindIndexOf(prototype.MarkingCategory, prototype.ID)].MarkingColors[i];
             var currentColor = new Color(
                 color.RByte,
                 color.GByte,
@@ -443,15 +453,15 @@ public sealed partial class MarkingPicker : Control
     {
         if (_selectedMarking is null) return;
         var markingPrototype = (MarkingPrototype) _selectedMarking.Metadata!;
-        int markingIndex = _currentMarkings.FindIndexOf(_selectedMarkingCategory, markingPrototype.ID);
+        int markingIndex = _currentMarkings.FindIndexOf(markingPrototype.MarkingCategory, markingPrototype.ID);
 
         if (markingIndex < 0) return;
 
         _selectedMarking.IconModulate = _currentMarkingColors[colorIndex];
 
-        var marking = new Marking(_currentMarkings.Markings[_selectedMarkingCategory][markingIndex]);
+        var marking = new Marking(_currentMarkings.Markings[markingPrototype.MarkingCategory][markingIndex]);
         marking.SetColor(colorIndex, _currentMarkingColors[colorIndex]);
-        _currentMarkings.Replace(_selectedMarkingCategory, markingIndex, marking);
+        _currentMarkings.Replace(markingPrototype.MarkingCategory, markingIndex, marking);
 
         OnMarkingColorChange?.Invoke(_currentMarkings);
     }
@@ -466,43 +476,7 @@ public sealed partial class MarkingPicker : Control
         }
 
         var marking = (MarkingPrototype) _selectedUnusedMarking.Metadata!;
-        var markingObject = marking.AsMarking();
-
-        // We need add hair markings in cloned set manually because _currentMarkings doesn't have it
-        var markingSet = new MarkingSet(_currentMarkings);
-        if (HairMarking != null)
-        {
-            markingSet.AddBack(MarkingCategories.Hair, HairMarking);
-        }
-        if (FacialHairMarking != null)
-        {
-            markingSet.AddBack(MarkingCategories.FacialHair, FacialHairMarking);
-        }
-
-        if (!_markingManager.MustMatchSkin(_currentSpecies, marking.BodyPart, out var _, _prototypeManager))
-        {
-            // Do default coloring
-            var colors = MarkingColoring.GetMarkingLayerColors(
-                marking,
-                CurrentSkinColor,
-                CurrentEyeColor,
-                markingSet
-            );
-            for (var i = 0; i < colors.Count; i++)
-            {
-                markingObject.SetColor(i, colors[i]);
-            }
-        }
-        else
-        {
-            // Color everything in skin color
-            for (var i = 0; i < marking.Sprites.Count; i++)
-            {
-                markingObject.SetColor(i, CurrentSkinColor);
-            }
-        }
-
-        markingObject.Forced = Forced;
+        var markingObject = CreateForgeMarking(marking); // #Forge-Change: share coloring with previews
 
         _currentMarkings.AddBack(_selectedMarkingCategory, markingObject);
 
@@ -519,7 +493,11 @@ public sealed partial class MarkingPicker : Control
         CMarkingsUsed.Insert(0, item);
 
         _selectedUnusedMarking = null;
+        if (_forgeProfile != null) Populate(CMarkingSearch.Text); // #Forge-Change: retain applied tile
+        PopulateUsed(); // #Forge-Change: grouped selected list and immediate color editing
+        RestoreForgeUsedSelection(marking.ID);
         OnMarkingAdded?.Invoke(_currentMarkings);
+        RefreshForgeTiles(); // #Forge-Change
     }
 
     private void MarkingRemove()
@@ -528,19 +506,21 @@ public sealed partial class MarkingPicker : Control
 
         var marking = (MarkingPrototype) _selectedMarking.Metadata!;
 
-        _currentMarkings.Remove(_selectedMarkingCategory, marking.ID);
+        _currentMarkings.Remove(marking.MarkingCategory, marking.ID); // #Forge-Change: selected row may belong to another category
 
         UpdatePoints();
 
         CMarkingsUsed.Remove(_selectedMarking);
 
-        if (marking.MarkingCategory == _selectedMarkingCategory)
+        if (_forgeProfile == null && marking.MarkingCategory == _selectedMarkingCategory) // #Forge-Change: no duplicate tile entries
         {
             var item = CMarkingsUnused.AddItem($"{GetMarkingName(marking)}", marking.Sprites[0].Frame0());
             item.Metadata = marking;
         }
         _selectedMarking = null;
         CMarkingColors.Visible = false;
+        if (_forgeProfile != null) Populate(CMarkingSearch.Text); // #Forge-Change
         OnMarkingRemoved?.Invoke(_currentMarkings);
+        RefreshForgeTiles(); // #Forge-Change
     }
 }

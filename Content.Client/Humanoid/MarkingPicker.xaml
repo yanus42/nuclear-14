@@ -6,7 +6,8 @@
             <!-- Unused markings -->
             <BoxContainer Orientation="Vertical" HorizontalExpand="True">
                 <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
-                    <Label Text="{Loc 'markings-unused'}" HorizontalAlignment="Stretch" HorizontalExpand="True" />
+                    <!-- #Forge-Change: tile mode shows both available and selected variants. -->
+                    <Label Name="CMarkingCatalogTitle" Text="{Loc 'markings-unused'}" HorizontalAlignment="Stretch" HorizontalExpand="True" />
                     <Label Name="CMarkingPoints" Text="uwu" HorizontalAlignment="Right" />
                 </BoxContainer>
 
