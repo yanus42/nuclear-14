@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Content.Shared.Radio;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -6,8 +7,8 @@ namespace Content.Shared._Forge.Radio;
 
 public static class StudioRadioChannels
 {
-    public static IReadOnlyList<ProtoId<RadioChannelPrototype>> Public { get; } =
-        Array.AsReadOnly<ProtoId<RadioChannelPrototype>>(["PBS", "Wasteland", "Bazar"]);
+    public static ImmutableArray<ProtoId<RadioChannelPrototype>> Public { get; } =
+        ImmutableArray.Create<ProtoId<RadioChannelPrototype>>("PBS", "Wasteland", "Bazar");
 }
 
 [Serializable, NetSerializable]
