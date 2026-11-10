@@ -16,7 +16,4 @@
       sprite: _Nuclear14/Interface/pipboy_programs.rsi
       state: radio
   - type: PipBoyReceiverCartridge # Forge-Change-Comp
-    channels:
-    - Bazar
-    - Wasteland
 # Forge-Change-End

@@ -13,6 +13,7 @@ public sealed partial class StudioRadioReceiverComponent : Component
 
     public EntityUid? SourceAudio;
     public EntityUid? ReceiverAudio;
+    public EntityUid? Listener;
     public TimeSpan AudioStart;
     public TimeSpan? PauseTime;
 }

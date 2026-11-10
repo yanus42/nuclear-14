@@ -15,6 +15,7 @@ public sealed partial class PipBoyReceiverUi : UIFragment
     private BoxContainer _root = default!;
     private BoxContainer _stations = default!;
     private Button _power = default!;
+    private CheckBox _music = default!;
     private BoundUserInterface _userInterface = default!;
     private bool _enabled;
 
@@ -33,6 +34,9 @@ public sealed partial class PipBoyReceiverUi : UIFragment
         _power = new Button();
         _power.OnPressed += _ => Send(new PipBoyReceiverUiMessageEvent(enabled: !_enabled));
         _root.AddChild(_power);
+        _music = new CheckBox { Text = Loc.GetString("pipboy-receiver-music") };
+        _music.OnPressed += _ => Send(new PipBoyReceiverUiMessageEvent(musicEnabled: _music.Pressed));
+        _root.AddChild(_music);
         _stations = new BoxContainer
         {
             Orientation = BoxContainer.LayoutOrientation.Vertical,
@@ -50,6 +54,7 @@ public sealed partial class PipBoyReceiverUi : UIFragment
 
         _enabled = receiver.Enabled;
         _power.Text = Loc.GetString(_enabled ? "pipboy-receiver-turn-off" : "pipboy-receiver-turn-on");
+        _music.Pressed = receiver.MusicEnabled;
         _stations.RemoveAllChildren();
         var prototypes = IoCManager.Resolve<IPrototypeManager>();
         foreach (var channelId in receiver.Channels)

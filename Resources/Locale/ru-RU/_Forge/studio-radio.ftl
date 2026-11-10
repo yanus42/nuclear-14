@@ -2,6 +2,10 @@ studio-radio-output-name = Выход студии
 studio-radio-output-desc = Подключите ко входу студийного микрофона, чтобы вещать на его радиоканале.
 studio-radio-input-name = Вход студии
 studio-radio-input-desc = Принимает сигнал музыкального автомата или кассетной деки.
+studio-radio-tune = Настроить станцию
+studio-radio-station = { $name } — { $frequency }
+studio-radio-retune-warning = Смена станции завершит текущую музыкальную трансляцию.
+studio-radio-retuned = Музыкальный эфир завершён. На новой станции его нужно запустить заново.
 
 jukebox-menu-broadcast-start = В эфир
 jukebox-menu-broadcast-stop = Завершить эфир

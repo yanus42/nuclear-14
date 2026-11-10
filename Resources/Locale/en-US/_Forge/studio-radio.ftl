@@ -2,6 +2,10 @@ studio-radio-output-name = Studio audio output
 studio-radio-output-desc = Link to the input of a studio microphone to use its radio channel.
 studio-radio-input-name = Studio audio input
 studio-radio-input-desc = Accepts a jukebox or tape deck for radio broadcast.
+studio-radio-tune = Tune station
+studio-radio-station = { $name } — { $frequency }
+studio-radio-retune-warning = Changing the station ends its current music broadcast.
+studio-radio-retuned = Music broadcast ended. Start it again to go on air on the new station.
 
 jukebox-menu-broadcast-start = Go on air
 jukebox-menu-broadcast-stop = End broadcast

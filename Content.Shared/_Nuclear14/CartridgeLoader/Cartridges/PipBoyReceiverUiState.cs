@@ -9,10 +9,12 @@ namespace Content.Shared._Nuclear14.CartridgeLoader.Cartridges;
 public sealed class PipBoyReceiverUiState(
     List<ProtoId<RadioChannelPrototype>> channels,
     string selectedChannel,
-    bool enabled) : BoundUserInterfaceState
+    bool enabled,
+    bool musicEnabled) : BoundUserInterfaceState
 {
     public readonly List<ProtoId<RadioChannelPrototype>> Channels = channels;
     public readonly string SelectedChannel = selectedChannel;
     public readonly bool Enabled = enabled;
+    public readonly bool MusicEnabled = musicEnabled;
 }
 /// Forge-Change-End

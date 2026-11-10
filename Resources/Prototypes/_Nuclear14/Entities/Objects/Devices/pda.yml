@@ -59,6 +59,7 @@
       rolloffFactor: 4
   - type: RadiationReceiver
   - type: PipBoyRadioWearer
+  - type: StudioRadioReceiver
   # Forge-Change-Start
   - type: RadioSpeaker # Forge-Change-Comp
     channels:

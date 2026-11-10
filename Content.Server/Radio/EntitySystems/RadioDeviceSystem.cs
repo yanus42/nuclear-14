@@ -208,20 +208,27 @@ public sealed class RadioDeviceSystem : EntitySystem
     /// </summary>
     public void SetReceiverChannel(EntityUid uid, ProtoId<RadioChannelPrototype> channel)
     {
-        if (!_protoMan.TryIndex(channel, out var prototype) ||
-            !TryComp<RadioMicrophoneComponent>(uid, out var microphone) ||
-            !TryComp<RadioSpeakerComponent>(uid, out var speaker))
+        if (_protoMan.TryIndex(channel, out var prototype) && HasComp<RadioSpeakerComponent>(uid))
+            SetStationChannel(uid, prototype);
+    }
+
+    public void SetStationChannel(EntityUid uid, RadioChannelPrototype prototype)
+    {
+        if (!TryComp<RadioMicrophoneComponent>(uid, out var microphone))
             return;
 
         microphone.BroadcastChannel = prototype.ID;
         microphone.Frequency = prototype.Frequency;
-        speaker.Channels.Clear();
-        speaker.Channels.Add(prototype.ID);
+        if (TryComp<RadioSpeakerComponent>(uid, out var speaker))
+        {
+            speaker.Channels.Clear();
+            speaker.Channels.Add(prototype.ID);
+        }
 
         if (TryComp<ActiveRadioComponent>(uid, out var active))
         {
             active.Channels.Clear();
-            if (speaker.Enabled)
+            if (speaker == null || speaker.Enabled)
                 active.Channels.Add(prototype.ID);
         }
 

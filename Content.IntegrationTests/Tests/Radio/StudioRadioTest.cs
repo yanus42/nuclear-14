@@ -3,14 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using Content.Client.UserInterface.Systems.Chat;
 using Content.Server._Forge.Radio;
+using Content.Server._Nuclear14.CartridgeLoader.Cartridges;
+using Content.Server.CartridgeLoader;
 using Content.Server.Power.Components;
+using Content.Server.Radio.Components;
 using Content.Server.Radio.EntitySystems;
+using Content.Shared._Forge.Radio;
+using Content.Shared._Nuclear14.CartridgeLoader.Cartridges;
 using Content.Shared.ADT.TapeRecorder.Components;
 using Content.Shared.ADT.TapeRecorder.Events;
 using Content.Shared.Audio.Jukebox;
+using Content.Shared.CartridgeLoader;
 using Content.Shared.Chat;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking;
+using Content.Shared.Inventory;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared.Audio;
@@ -61,6 +68,8 @@ public sealed class StudioRadioTest
         var links = server.System<SharedDeviceLinkSystem>();
         var timing = server.ResolveDependency<IGameTiming>();
         EntityUid jukebox = default;
+        EntityUid contender = default;
+        EntityUid operatorUid = default;
         EntityUid microphone = default;
         EntityUid first = default;
         EntityUid second = default;
@@ -69,14 +78,18 @@ public sealed class StudioRadioTest
         await server.WaitPost(() =>
         {
             jukebox = entities.SpawnEntity("Jukebox", map.GridCoords);
+            contender = entities.SpawnEntity("Jukebox", map.GridCoords);
+            operatorUid = entities.SpawnEntity("MobHuman", map.GridCoords);
             microphone = entities.SpawnEntity("RadioDJMicrophone", map.GridCoords);
             first = entities.SpawnEntity("N14RadioTable", map.GridCoords);
             second = entities.SpawnEntity("N14RadioTable", map.GridCoords);
             other = entities.SpawnEntity("N14RadioTableWasteland", map.GridCoords);
             entities.GetComponent<ApcPowerReceiverComponent>(jukebox).NeedsPower = false;
+            entities.GetComponent<ApcPowerReceiverComponent>(contender).NeedsPower = false;
             entities.GetComponent<ApcPowerReceiverComponent>(microphone).NeedsPower = false;
             radios.SetSpeakerEnabled(second, null, false);
             Link(links, jukebox, microphone);
+            Link(links, contender, microphone);
         });
         await server.WaitRunTicks(5);
 
@@ -91,6 +104,17 @@ public sealed class StudioRadioTest
             Assert.That(entities.GetComponent<AudioComponent>(player.AudioStream!.Value).FileName, Is.EqualTo(monoPath));
             Assert.That(ReceiverAudio(entities, first)?.FileName, Is.EqualTo(monoPath));
             Assert.That(ReceiverAudio(entities, second), Is.Null);
+            Assert.That(ReceiverAudio(entities, other), Is.Null);
+            Assert.That(entities.GetComponent<RadioMicrophoneComponent>(other).BroadcastChannel, Is.EqualTo("Wasteland"));
+
+            var tuning = entities.GetComponent<StudioRadioTuningComponent>(other);
+            tuning.CanTune = false;
+            Send(entities, other, new StudioRadioSelectChannelMessage("PBS") { Actor = operatorUid });
+            Assert.That(ReceiverAudio(entities, other), Is.Null);
+            tuning.CanTune = true;
+            Send(entities, other, new StudioRadioSelectChannelMessage("PBS") { Actor = operatorUid });
+            Assert.That(ReceiverAudio(entities, other)?.FileName, Is.EqualTo(monoPath));
+            Send(entities, other, new StudioRadioSelectChannelMessage("Wasteland") { Actor = operatorUid });
             Assert.That(ReceiverAudio(entities, other), Is.Null);
         });
         await server.WaitRunTicks(45);
@@ -111,12 +135,103 @@ public sealed class StudioRadioTest
         await server.WaitAssertion(() =>
         {
             Assert.That(ReceiverAudio(entities, first)?.State, Is.EqualTo(AudioState.Paused));
+            Send(entities, contender, new JukeboxSelectedMessage("BillieHolidayCrazy"));
+            Send(entities, contender, new JukeboxBroadcastMessage { Actor = operatorUid });
+            Assert.That(entities.GetComponent<JukeboxComponent>(contender).Broadcasting, Is.False);
             radios.SetSpeakerEnabled(second, null, false);
             Assert.That(ReceiverAudio(entities, second), Is.Null);
-            Send(entities, jukebox, new JukeboxStopMessage());
+
+            Send(entities, microphone, new StudioRadioSelectChannelMessage("Wasteland") { Actor = operatorUid });
             Assert.That(ReceiverAudio(entities, first), Is.Null);
+            Assert.That(ReceiverAudio(entities, other), Is.Null);
             Assert.That(entities.GetComponent<JukeboxComponent>(jukebox).Broadcasting, Is.False);
+
+            Send(entities, contender, new JukeboxBroadcastMessage { Actor = operatorUid });
+            Assert.That(entities.GetComponent<JukeboxComponent>(contender).Broadcasting, Is.True);
+            Assert.That(ReceiverAudio(entities, other), Is.Not.Null);
+            Assert.That(ReceiverAudio(entities, first), Is.Null);
+            Send(entities, contender, new JukeboxStopMessage());
+            Assert.That(ReceiverAudio(entities, other), Is.Null);
         });
+
+        await pair.CleanReturnAsync();
+    }
+
+    [Test]
+    public async Task PipBoyPlaysStudioMusicOnlyForItsWearerAndSwitchesSources()
+    {
+        await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true, Dirty = true });
+        var (server, client) = pair;
+        var map = await pair.CreateTestMap();
+        var entities = server.EntMan;
+        var links = server.System<SharedDeviceLinkSystem>();
+        var inventory = server.System<InventorySystem>();
+        var loader = server.System<CartridgeLoaderSystem>();
+        var session = server.PlayerMan.Sessions.Single();
+        EntityUid jukebox = default;
+        EntityUid pipBoy = default;
+        EntityUid wearer = default;
+        EntityUid receiver = default;
+        EntityUid player = default;
+
+        try
+        {
+            await server.WaitAssertion(() =>
+            {
+                jukebox = entities.SpawnEntity("Jukebox", map.GridCoords);
+                var mic = entities.SpawnEntity("N14MicrophoneStand", map.GridCoords);
+                entities.GetComponent<ApcPowerReceiverComponent>(jukebox).NeedsPower = false;
+                Link(links, jukebox, mic);
+
+                wearer = entities.SpawnEntity("MobHuman", map.GridCoords);
+                server.PlayerMan.SetAttachedEntity(session, wearer);
+                pipBoy = entities.SpawnEntity("N14Pipboy", map.GridCoords);
+                Assert.That(inventory.TryEquip(wearer, pipBoy, "id", silent: true, force: true), Is.True);
+                Assert.That(loader.TryGetProgram<PipBoyReceiverCartridgeComponent>(pipBoy, out var receiverUid), Is.True);
+                Assert.That(loader.TryGetProgram<PipBoyRadioCartridgeComponent>(pipBoy, out var playerUid), Is.True);
+                receiver = receiverUid!.Value;
+                player = playerUid!.Value;
+            });
+            await pair.RunTicksSync(5);
+
+            await server.WaitAssertion(() =>
+            {
+                Send(entities, jukebox, new JukeboxSelectedMessage("BigIron"));
+                Send(entities, jukebox, new JukeboxBroadcastMessage { Actor = wearer });
+
+                SendCartridge(entities, player, pipBoy, wearer, new PipBoyRadioUiMessageEvent(PipBoyRadioAction.Select, "LonesomeValley"));
+                SendCartridge(entities, player, pipBoy, wearer, new PipBoyRadioUiMessageEvent(PipBoyRadioAction.Play));
+                var personal = entities.GetComponent<PipBoyRadioCartridgeComponent>(player);
+                Assert.That(personal.Playing, Is.True);
+
+                SendCartridge(entities, receiver, pipBoy, jukebox, new PipBoyReceiverUiMessageEvent("PBS", musicEnabled: true));
+                Assert.That(ReceiverAudio(entities, pipBoy), Is.Null);
+                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent("PBS", musicEnabled: true));
+                var stream = ReceiverAudio(entities, pipBoy);
+                Assert.That(stream?.IncludedEntities, Is.EquivalentTo(new[] { wearer }));
+                Assert.That(stream!.FileName, Does.EndWith("MUS_Big_Iron.radio-mono.ogg"));
+                Assert.That(personal.Paused, Is.True);
+
+                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent("Wasteland"));
+                Assert.That(ReceiverAudio(entities, pipBoy), Is.Null);
+                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent("PBS"));
+                Assert.That(ReceiverAudio(entities, pipBoy), Is.Not.Null);
+
+                SendCartridge(entities, player, pipBoy, wearer, new PipBoyRadioUiMessageEvent(PipBoyRadioAction.Play));
+                Assert.That(personal.Playing, Is.True);
+                Assert.That(ReceiverAudio(entities, pipBoy), Is.Null);
+
+                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent(musicEnabled: true));
+                Assert.That(ReceiverAudio(entities, pipBoy), Is.Not.Null);
+                Assert.That(inventory.TryUnequip(wearer, "id", silent: true, force: true), Is.True);
+                Assert.That(ReceiverAudio(entities, pipBoy), Is.Null);
+            });
+        }
+        finally
+        {
+            await client.WaitPost(() => client.ResolveDependency<IClientNetManager>().ClientDisconnect("Studio radio test complete"));
+            await pair.RunTicksSync(5);
+        }
 
         await pair.CleanReturnAsync();
     }
@@ -198,5 +313,12 @@ public sealed class StudioRadioTest
     private static void Send(IEntityManager entities, EntityUid uid, BoundUserInterfaceMessage message)
     {
         entities.EventBus.RaiseLocalEvent(uid, (object) message, true);
+    }
+
+    private static void SendCartridge(IEntityManager entities, EntityUid cartridge, EntityUid loader, EntityUid actor, CartridgeMessageEvent message)
+    {
+        message.LoaderUid = entities.GetNetEntity(loader);
+        message.Actor = actor;
+        entities.EventBus.RaiseLocalEvent(cartridge, message);
     }
 }

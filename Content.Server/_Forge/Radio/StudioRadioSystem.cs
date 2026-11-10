@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Content.Server._Nuclear14.CartridgeLoader;
 using Content.Server.Power.EntitySystems;
 using Content.Server.Radio.Components;
 using Content.Shared.DeviceLinking;
@@ -6,6 +7,7 @@ using Content.Shared.Radio;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.Audio.Systems;
+using Robust.Shared.Player;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
@@ -72,15 +74,24 @@ public sealed class StudioRadioSystem : EntitySystem
 
     public void StopMusic(EntityUid source)
     {
+        StopMusicFrom(source, transmitter: false);
+    }
+
+    public bool StopTransmitterMusic(EntityUid microphone) => StopMusicFrom(microphone, transmitter: true);
+
+    private bool StopMusicFrom(EntityUid uid, bool transmitter)
+    {
         foreach (var broadcast in _broadcasts.Values)
         {
-            if (broadcast.Source != source)
+            if ((transmitter ? broadcast.Transmitter : broadcast.Source) != uid)
                 continue;
 
             EndMusic(broadcast);
             RefreshReceivers();
-            return;
+            return true;
         }
+
+        return false;
     }
 
     public override void Update(float frameTime)
@@ -146,10 +157,8 @@ public sealed class StudioRadioSystem : EntitySystem
     private void RefreshReceiver(Entity<StudioRadioReceiverComponent> receiver)
     {
         if (TerminatingOrDeleted(receiver) ||
-            !TryComp<RadioSpeakerComponent>(receiver, out var speaker) || !speaker.Enabled ||
-            !TryComp<ActiveRadioComponent>(receiver, out var radio) ||
             !TryComp<RadioMicrophoneComponent>(receiver, out var tuning) ||
-            !radio.Channels.Contains(tuning.BroadcastChannel) ||
+            !CanListen(receiver, tuning.BroadcastChannel, out var listener) ||
             !_broadcasts.TryGetValue(new StudioRadioFrequency(tuning.BroadcastChannel, tuning.Frequency), out var broadcast) ||
             !TryGetSourceAudio(broadcast, out var audio))
         {
@@ -158,12 +167,17 @@ public sealed class StudioRadioSystem : EntitySystem
         }
 
         var state = receiver.Comp;
-        var newStream = state.SourceAudio != broadcast.Audio || TerminatingOrDeleted(state.ReceiverAudio);
+        var newStream = state.SourceAudio != broadcast.Audio ||
+                        state.Listener != listener ||
+                        TerminatingOrDeleted(state.ReceiverAudio);
         if (newStream)
         {
             StopReceiver(state);
-            state.ReceiverAudio = _audio.PlayPvs(broadcast.Song, receiver.Owner, state.MusicParams)?.Entity;
+            state.ReceiverAudio = listener is { } wearer
+                ? _audio.PlayGlobal(broadcast.Song, wearer, state.MusicParams)?.Entity
+                : _audio.PlayPvs(broadcast.Song, receiver.Owner, state.MusicParams)?.Entity;
             state.SourceAudio = broadcast.Audio;
+            state.Listener = listener;
         }
         else if (state.AudioStart == audio.AudioStart && state.PauseTime == audio.PauseTime)
         {
@@ -182,6 +196,19 @@ public sealed class StudioRadioSystem : EntitySystem
         state.PauseTime = audio.PauseTime;
     }
 
+    private bool CanListen(EntityUid receiver, string channel, out EntityUid? listener)
+    {
+        listener = null;
+        if (TryComp<PipBoyRadioWearerComponent>(receiver, out var pipBoy))
+        {
+            listener = pipBoy.WearerUid;
+            return pipBoy.StudioMusicEnabled && HasComp<ActorComponent>(listener);
+        }
+
+        return TryComp<RadioSpeakerComponent>(receiver, out var speaker) && speaker.Enabled &&
+               TryComp<ActiveRadioComponent>(receiver, out var radio) && radio.Channels.Contains(channel);
+    }
+
     private bool TryGetSourceAudio(MusicBroadcast broadcast, [NotNullWhen(true)] out AudioComponent? audio)
     {
         return TryComp(broadcast.Audio, out audio) && !TerminatingOrDeleted(broadcast.Audio) && audio.State != AudioState.Stopped;
@@ -191,6 +218,7 @@ public sealed class StudioRadioSystem : EntitySystem
     {
         receiver.ReceiverAudio = _audio.Stop(receiver.ReceiverAudio);
         receiver.SourceAudio = null;
+        receiver.Listener = null;
     }
 
     private sealed record MusicBroadcast(

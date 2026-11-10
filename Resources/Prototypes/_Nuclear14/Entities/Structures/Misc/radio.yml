@@ -57,6 +57,11 @@
   - type: DeviceLinkSink
     ports:
     - StudioRadioInput
+  - type: StudioRadioTuning
+  - type: UserInterface
+    interfaces:
+      enum.StudioRadioUiKey.Key:
+        type: StudioRadioBoundUserInterface
   - type: Clickable
   - type: InteractionOutline
   - type: WiresVisuals
@@ -104,6 +109,11 @@
     toggleOnInteract: true
     IsSpeaker: true
   - type: StudioRadioReceiver
+  - type: StudioRadioTuning
+  - type: UserInterface
+    interfaces:
+      enum.StudioRadioUiKey.Key:
+        type: StudioRadioBoundUserInterface
   - type: Tag
     tags:
     - Radio
@@ -134,6 +144,11 @@
   - type: DeviceLinkSink
     ports:
     - StudioRadioInput
+  - type: StudioRadioTuning
+  - type: UserInterface
+    interfaces:
+      enum.StudioRadioUiKey.Key:
+        type: StudioRadioBoundUserInterface
   - type: ActiveRadio
     channels:
     - PBS

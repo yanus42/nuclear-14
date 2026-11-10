@@ -14,6 +14,7 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
     [Dependency] private readonly CartridgeLoaderSystem _cartridgeLoaderSystem = default!;
     [Dependency] private readonly SharedAudioSystem _audio = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+    [Dependency] private readonly PipBoyRadioWearerSystem _wearers = default!;
 
     public override void Initialize()
     {
@@ -41,7 +42,9 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
             return;
 
         var loaderUid = GetEntity(args.LoaderUid);
-        component.ListenerUid = args.Actor;
+        EntityUid? listener = TryComp<PipBoyRadioWearerComponent>(loaderUid, out var wearer) && wearer.WearerUid == args.Actor
+            ? args.Actor
+            : null;
 
         switch (message.Action)
         {
@@ -56,7 +59,8 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
                 SelectSong(
                     component,
                     songId,
-                    component.Playing);
+                    component.Playing,
+                    listener);
 
                 break;
 
@@ -71,7 +75,7 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
 
             /// Forge-Change-End
             case PipBoyRadioAction.Play:
-                Play(component);
+                Play(component, listener);
                 break;
 
             case PipBoyRadioAction.Pause:
@@ -86,16 +90,21 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
                 SelectRelative(
                     component,
                     -1,
-                    component.Playing);
+                    component.Playing,
+                    listener);
                 break;
 
             case PipBoyRadioAction.Next:
                 SelectRelative(
                     component,
                     1,
-                    component.Playing);
+                    component.Playing,
+                    listener);
                 break;
         }
+
+        if (listener != null && component.Playing && wearer?.StudioMusicEnabled == true)
+            _wearers.SetStudioMusicEnabled(loaderUid, false, wearer);
 
         UpdateUiState(loaderUid, component);
     }
@@ -103,21 +112,23 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
     private void SelectSong(
         PipBoyRadioCartridgeComponent component,
         ProtoId<JukeboxPrototype> songId,
-        bool startPlayback)
+        bool startPlayback,
+        EntityUid? listener)
     {
         Stop(component);
 
         component.SelectedSongId = songId;
 
         if (startPlayback)
-            Play(component);
+            Play(component, listener);
     }
 
     /// Forge-Change
     private void SelectRelative(
         PipBoyRadioCartridgeComponent component,
         int direction,
-        bool startPlayback)
+        bool startPlayback,
+        EntityUid? listener)
     {
         var songs = component.Songs;
 
@@ -148,14 +159,15 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
         SelectSong(
             component,
             songs[nextIndex],
-            startPlayback);
+            startPlayback,
+            listener);
     }
 
     private void Play(
-        PipBoyRadioCartridgeComponent component)
+        PipBoyRadioCartridgeComponent component,
+        EntityUid? listener)
     {
-        if (component.WearerUid is not { } wearer ||
-            component.ListenerUid != wearer)
+        if (listener is not { } recipient || !Exists(recipient))
             return;
 
         if (Exists(component.AudioStream))
@@ -176,14 +188,10 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
                 out var jukeboxPrototype))
             return;
 
-        if (component.ListenerUid is not { } listener ||
-            !Exists(listener))
-            return;
-
         component.AudioStream =
             _audio.PlayGlobal(
                 jukeboxPrototype.Path,
-                listener,
+                recipient,
                 /// Forge-Change
                 AudioParams.Default.WithVolume(SharedAudioSystem.GainToVolume(component.Volume))
             )?.Entity;
@@ -210,6 +218,16 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
         component.PlaybackGrace = 0f;
     }
 
+    public void PauseForStudioMusic(EntityUid loader)
+    {
+        var programs = EntityQueryEnumerator<PipBoyRadioCartridgeComponent, CartridgeComponent>();
+        while (programs.MoveNext(out var player, out var cartridge))
+        {
+            if (cartridge.LoaderUid == loader && player.Playing)
+                Pause(player);
+        }
+    }
+
     private void Stop(
         PipBoyRadioCartridgeComponent component)
     {
@@ -229,7 +247,7 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
             EntityQueryEnumerator<PipBoyRadioCartridgeComponent, CartridgeComponent>();
 
         while (query.MoveNext(
-                   out _,
+                   out var programUid,
                    out var component,
                    out var cartridge))
         {
@@ -253,16 +271,18 @@ public sealed class PipBoyRadioCartridgeSystem : EntitySystem
             component.Paused = false;
 
             if (cartridge.LoaderUid is not { } loaderUid ||
-                !Exists(loaderUid))
+                !TryComp<PipBoyRadioWearerComponent>(loaderUid, out var wearer))
                 continue;
 
             // Automatically start the next track.
             SelectRelative(
                 component,
                 1,
-                true);
+                true,
+                wearer.WearerUid);
 
-            UpdateUiState(loaderUid, component);
+            if (TryComp<CartridgeLoaderComponent>(loaderUid, out var loader) && loader.ActiveProgram == programUid)
+                UpdateUiState(loaderUid, component);
         }
     }
 

@@ -1,0 +1,48 @@
+using Content.Shared._Forge.Radio;
+using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
+
+namespace Content.Client._Forge.Radio;
+
+public sealed class StudioRadioBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
+{
+    private BoxContainer? _stations;
+
+    protected override void Open()
+    {
+        base.Open();
+        var window = this.CreateWindow<DefaultWindow>();
+        window.Title = Loc.GetString("studio-radio-tune");
+        _stations = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, SeparationOverride = 4 };
+        window.Contents.AddChild(_stations);
+    }
+
+    protected override void UpdateState(BoundUserInterfaceState state)
+    {
+        if (_stations == null || state is not StudioRadioUiState radio)
+            return;
+
+        _stations.RemoveAllChildren();
+        var prototypes = IoCManager.Resolve<IPrototypeManager>();
+        foreach (var id in StudioRadioChannels.Public)
+        {
+            if (!prototypes.TryIndex(id, out var channel))
+                continue;
+
+            var button = new Button
+            {
+                Text = Loc.GetString("studio-radio-station", ("name", channel.LocalizedName), ("frequency", channel.Frequency)),
+                Disabled = channel.ID == radio.Channel,
+                HorizontalExpand = true,
+            };
+            button.OnPressed += _ => SendMessage(new StudioRadioSelectChannelMessage(id));
+            _stations.AddChild(button);
+        }
+
+        if (radio.Transmitter)
+            _stations.AddChild(new Label { Text = Loc.GetString("studio-radio-retune-warning") });
+    }
+}

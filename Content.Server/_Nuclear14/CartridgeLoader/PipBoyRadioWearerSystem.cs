@@ -1,3 +1,4 @@
+using Content.Server._Forge.Radio;
 using Content.Server._Nuclear14.CartridgeLoader.Cartridges;
 using Content.Shared.CartridgeLoader;
 using Content.Shared.Inventory.Events;
@@ -8,6 +9,7 @@ namespace Content.Server._Nuclear14.CartridgeLoader;
 public sealed class PipBoyRadioWearerSystem : EntitySystem
 {
     [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private readonly StudioRadioSystem _studio = default!;
 
     public override void Initialize()
     {
@@ -22,15 +24,8 @@ public sealed class PipBoyRadioWearerSystem : EntitySystem
         PipBoyRadioWearerComponent component,
         GotEquippedEvent args)
     {
-        var query = EntityQueryEnumerator<PipBoyRadioCartridgeComponent, CartridgeComponent>();
-
-        while (query.MoveNext(out _, out var radio, out var cartridge))
-        {
-            if (cartridge.LoaderUid != uid)
-                continue;
-
-            radio.WearerUid = args.Equipee;
-        }
+        component.WearerUid = args.Equipee;
+        _studio.RefreshReceiver(uid);
     }
 
     private void OnUnequipped(
@@ -38,7 +33,8 @@ public sealed class PipBoyRadioWearerSystem : EntitySystem
         PipBoyRadioWearerComponent component,
         GotUnequippedEvent args)
     {
-
+        component.WearerUid = null;
+        SetStudioMusicEnabled(uid, false, component);
         var query = EntityQueryEnumerator<PipBoyRadioCartridgeComponent, CartridgeComponent>();
 
         while (query.MoveNext(out _, out var radio, out var cartridge))
@@ -53,8 +49,15 @@ public sealed class PipBoyRadioWearerSystem : EntitySystem
             radio.Playing = false;
             radio.Paused = false;
             radio.PlaybackGrace = 0f;
-            radio.ListenerUid = null;
-            radio.WearerUid = null;
         }
+    }
+
+    public void SetStudioMusicEnabled(EntityUid uid, bool enabled, PipBoyRadioWearerComponent? wearer = null)
+    {
+        if (!Resolve(uid, ref wearer, false))
+            return;
+
+        wearer.StudioMusicEnabled = enabled;
+        _studio.RefreshReceiver(uid);
     }
 }
