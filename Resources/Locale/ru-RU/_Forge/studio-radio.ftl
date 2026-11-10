@@ -5,9 +5,8 @@ studio-radio-input-desc = Принимает сигнал музыкальног
 
 jukebox-menu-broadcast-start = В эфир
 jukebox-menu-broadcast-stop = Завершить эфир
-jukebox-broadcast-song-name = { $song } (эфир)
 jukebox-broadcast-no-transmitter = Подключите автомат к одному студийному микрофону с питанием.
-jukebox-broadcast-incompatible-song = Для эфира выберите монотрек.
+jukebox-broadcast-select-song = Выберите песню для эфира.
 jukebox-broadcast-frequency-busy = На этой частоте уже звучит другая песня.
 
 ent-N14StudioTapeDeck = студийная кассетная дека

@@ -11,6 +11,7 @@ using Content.Shared.Audio.Jukebox;
 using Content.Shared.Chat;
 using Content.Shared.Containers.ItemSlots;
 using Content.Shared.DeviceLinking;
+using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Components;
@@ -43,7 +44,17 @@ public sealed class StudioRadioTest
     public async Task MusicFollowsTheStudioFrequencyAndPlaybackClock()
     {
         await using var pair = await PoolManager.GetServerClient();
-        var server = pair.Server;
+        var (server, client) = pair;
+        await client.WaitAssertion(() =>
+        {
+            var cache = client.ResolveDependency<IResourceCache>();
+            foreach (var track in client.ProtoMan.EnumeratePrototypes<JukeboxPrototype>())
+            {
+                var stream = cache.GetResource<AudioResource>(track.PositionalPath.Path).AudioStream;
+                Assert.That(stream.ChannelCount, Is.EqualTo(1), track.ID);
+            }
+        });
+
         var map = await pair.CreateTestMap();
         var entities = server.EntMan;
         var radios = server.System<RadioDeviceSystem>();
@@ -71,10 +82,14 @@ public sealed class StudioRadioTest
 
         await server.WaitAssertion(() =>
         {
-            Send(entities, jukebox, new JukeboxSelectedMessage("BillieHolidayCrazy"));
+            // Big Iron has a stereo original and needs the mono version on both speakers.
+            const string monoPath = "/Audio/_Nuclear14/Lobby/MUS_Big_Iron.radio-mono.ogg";
+            Send(entities, jukebox, new JukeboxSelectedMessage("BigIron"));
             Send(entities, jukebox, new JukeboxBroadcastMessage());
-            Assert.That(entities.GetComponent<JukeboxComponent>(jukebox).Broadcasting, Is.True);
-            Assert.That(ReceiverAudio(entities, first), Is.Not.Null);
+            var player = entities.GetComponent<JukeboxComponent>(jukebox);
+            Assert.That(player.Broadcasting, Is.True);
+            Assert.That(entities.GetComponent<AudioComponent>(player.AudioStream!.Value).FileName, Is.EqualTo(monoPath));
+            Assert.That(ReceiverAudio(entities, first)?.FileName, Is.EqualTo(monoPath));
             Assert.That(ReceiverAudio(entities, second), Is.Null);
             Assert.That(ReceiverAudio(entities, other), Is.Null);
         });

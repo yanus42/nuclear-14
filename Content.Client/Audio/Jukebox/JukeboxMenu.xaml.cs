@@ -99,10 +99,7 @@ public sealed partial class JukeboxMenu : FancyWindow
 
         foreach (var entry in jukeboxProtos)
         {
-            var name = entry.RadioCompatible
-                ? Loc.GetString("jukebox-broadcast-song-name", ("song", entry.Name))
-                : entry.Name;
-            MusicList.AddItem(name, metadata: entry.ID);
+            MusicList.AddItem(entry.Name, metadata: entry.ID);
         }
     }
 

@@ -1,4 +1,18 @@
-﻿- files: ["mus_billieholiday_crazy_mono.ogg", "mus_billieholiday_easy_mono.ogg", "mus_bobcrosby_happy_mono.ogg", "mus_bobcrosby_way_mono.ogg", "mus_coleporter_anything_mono.ogg", "mus_dannykaye_civilization_mono.ogg", "mus_generic_boogie_mono.ogg", "mus_generic_fox_mono.ogg", "mus_generic_jazzy_mono.ogg", "mus_generic_sunning_mono.ogg", "mus_generic_swing_mono.ogg", "mus_inkspots_idont_mono.ogg", "mus_roybrown_butcher_mono.ogg", "mus_roybrown_mighty_mono.ogg", "mus_texbeneke_guy_mono.ogg" ]
+- files: ["mus_billieholiday_crazy_mono.ogg", "mus_billieholiday_easy_mono.ogg", "mus_bobcrosby_happy_mono.ogg", "mus_bobcrosby_way_mono.ogg", "mus_coleporter_anything_mono.ogg", "mus_dannykaye_civilization_mono.ogg", "mus_generic_boogie_mono.ogg", "mus_generic_fox_mono.ogg", "mus_generic_jazzy_mono.ogg", "mus_generic_sunning_mono.ogg", "mus_generic_swing_mono.ogg", "mus_inkspots_idont_mono.ogg", "mus_roybrown_butcher_mono.ogg", "mus_roybrown_mighty_mono.ogg", "mus_texbeneke_guy_mono.ogg" ]
   license: "CC-BY-NC-SA-3.0"
   copyright: "Bethesda Softworks, from fallout 3. Converted from MP3 to OGG. License not confirmed or guaranteed."
   source: "https://www.myinstants.com/en/instant/war-never-changes-fallouts-narrator-15365/"
+
+- files:
+  - "mus_al_rex_hydrogen_bomb_mono.radio-mono.ogg"
+  - "mus_mitch_miller_im_looking_over_a_four_leaf_clover_mono.radio-mono.ogg"
+  - "mus_tennessee_ernie_ford_sixteen_tons_mono.radio-mono.ogg"
+  - "mus_battle_hymn_of_the_republic_mono.radio-mono.ogg"
+  - "mus_hanny_williams_the_yellow_rose_of_texas_mono.radio-mono.ogg"
+  - "mus_elton_britt_uranium_fever_mono.radio-mono.ogg"
+  - "mus_terrible_tom_boss_nigger_mono.radio-mono.ogg"
+  - "mus_dion_the_wanderer_mono.radio-mono.ogg"
+  - "mus_frank_sinatra_thats_life_mono.radio-mono.ogg"
+  license: "CC-BY-NC-SA-3.0"
+  copyright: "Mono conversions of existing Nuclear-14 tracks. Copyright remains with the original rights holders."
+  source: "https://github.com/Forge-Station/nuclear-14/tree/b3d1b719929c7ee0065a4907cca19973442eb7c0/Resources/Audio/_Nuclear14/Music/Fallout3"

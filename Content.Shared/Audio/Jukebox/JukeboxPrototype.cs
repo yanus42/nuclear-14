@@ -22,8 +22,10 @@ public sealed partial class JukeboxPrototype : IPrototype
     public SoundPathSpecifier Path = default!;
 
     /// <summary>
-    /// Allows the studio to broadcast this mono recording as positional audio.
+    /// Mono recording for the jukebox and nearby radios when the original track is stereo.
     /// </summary>
     [DataField]
-    public bool RadioCompatible;
+    public SoundPathSpecifier? MonoPath;
+
+    public SoundPathSpecifier PositionalPath => MonoPath ?? Path;
 }

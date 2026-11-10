@@ -5,9 +5,8 @@ studio-radio-input-desc = Accepts a jukebox or tape deck for radio broadcast.
 
 jukebox-menu-broadcast-start = Go on air
 jukebox-menu-broadcast-stop = End broadcast
-jukebox-broadcast-song-name = { $song } (radio)
 jukebox-broadcast-no-transmitter = Link the jukebox to a single powered studio microphone.
-jukebox-broadcast-incompatible-song = Select a mono recording to broadcast.
+jukebox-broadcast-select-song = Select a song to broadcast.
 jukebox-broadcast-frequency-busy = A song is already on the air on this frequency.
 
 ent-N14StudioTapeDeck = studio tape deck

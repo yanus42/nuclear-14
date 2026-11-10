@@ -67,7 +67,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
                 return;
             }
 
-            component.AudioStream = Audio.PlayPvs(jukeboxProto.Path, uid, AudioParams.Default.WithMaxDistance(10f))?.Entity;
+            component.AudioStream = Audio.PlayPvs(jukeboxProto.PositionalPath, uid, AudioParams.Default.WithMaxDistance(10f))?.Entity;
             Dirty(uid, component);
         }
     }
@@ -127,9 +127,9 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
             return;
         }
 
-        if (!_protoManager.TryIndex(entity.Comp.SelectedSongId, out var song) || !song.RadioCompatible)
+        if (!_protoManager.TryIndex(entity.Comp.SelectedSongId, out var song))
         {
-            _popup.PopupEntity(Loc.GetString("jukebox-broadcast-incompatible-song"), entity, args.Actor);
+            _popup.PopupEntity(Loc.GetString("jukebox-broadcast-select-song"), entity, args.Actor);
             return;
         }
 
@@ -145,7 +145,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
         entity.Comp.Broadcasting = true;
         Dirty(entity);
-        _studioRadio.StartMusic(entity, transmitter, tuning, audio, song.Path);
+        _studioRadio.StartMusic(entity, transmitter, tuning, audio, song.PositionalPath);
     }
 
     private void OnBroadcastEnded(EntityUid uid, JukeboxComponent jukebox, StudioMusicEndedEvent args)
