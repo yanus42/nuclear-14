@@ -80,7 +80,6 @@
     preinstalled:
       - CrewManifestCartridge
       - N14PipBoyNotekeeperCartridge # Forge-Change
-      - N14PipBoyRadioCartridge
       # Forge-Change-Start
       - N14PipBoyReceiverCartridge
       - N14PipBoyNanoChatCartridge

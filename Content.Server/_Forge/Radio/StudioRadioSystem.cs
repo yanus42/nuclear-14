@@ -205,7 +205,7 @@ public sealed class StudioRadioSystem : EntitySystem
         if (TryComp<PipBoyRadioWearerComponent>(receiver, out var pipBoy))
         {
             listener = pipBoy.WearerUid;
-            return pipBoy.StudioMusicEnabled && HasComp<ActorComponent>(listener);
+            return HasComp<ActorComponent>(listener);
         }
 
         return TryComp<ActiveRadioComponent>(receiver, out var radio) && radio.Channels.Contains(channel);

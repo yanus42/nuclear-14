@@ -11,8 +11,6 @@ public sealed class PipBoyReceiverCartridgeSystem : EntitySystem
 {
     [Dependency] private readonly CartridgeLoaderSystem _loader = default!;
     [Dependency] private readonly RadioDeviceSystem _radio = default!;
-    [Dependency] private readonly PipBoyRadioWearerSystem _wearers = default!;
-    [Dependency] private readonly PipBoyRadioCartridgeSystem _player = default!;
 
     public override void Initialize()
     {
@@ -41,13 +39,9 @@ public sealed class PipBoyReceiverCartridgeSystem : EntitySystem
 
         var enabled = !speaker.Enabled || microphone.BroadcastChannel != message.Channel.Id;
         if (enabled)
-        {
             _radio.SetReceiverChannel(receiver, message.Channel);
-            _player.PauseForStudioMusic(receiver);
-        }
 
         _radio.SetSpeakerEnabled(receiver, args.Actor, enabled, quiet: true, component: speaker);
-        _wearers.SetStudioMusicEnabled(receiver, enabled, wearer);
 
         UpdateUi(receiver, component);
     }
@@ -56,8 +50,6 @@ public sealed class PipBoyReceiverCartridgeSystem : EntitySystem
     {
         if (TryComp<RadioSpeakerComponent>(args.Loader, out var speaker))
             _radio.SetSpeakerEnabled(args.Loader, null, false, quiet: true, component: speaker);
-
-        _wearers.SetStudioMusicEnabled(args.Loader, false);
     }
 
     private void UpdateUi(EntityUid receiver, PipBoyReceiverCartridgeComponent component)
