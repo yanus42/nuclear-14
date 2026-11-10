@@ -1,4 +1,5 @@
 using System.Linq;
+using Content.Server._Forge.Radio;
 using Content.Server.Chat.Systems;
 using Content.Server.Interaction;
 using Content.Server.Language;
@@ -44,6 +45,7 @@ public sealed class RadioDeviceSystem : EntitySystem
     [Dependency] private readonly LanguageSystem _language = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IConfigurationManager _cfg = default!; // Forge-Change
+    [Dependency] private readonly StudioRadioSystem _studioRadio = default!;
 
     // Used to prevent a shitter from using a bunch of radios to spam chat.
     private HashSet<(string, EntityUid)> _recentlySent = new();
@@ -195,6 +197,8 @@ public sealed class RadioDeviceSystem : EntitySystem
             EnsureComp<ActiveRadioComponent>(uid).Channels.UnionWith(component.Channels);
         else
             RemCompDeferred<ActiveRadioComponent>(uid);
+
+        _studioRadio.RefreshReceiver(uid);
     }
     #endregion
 
@@ -220,6 +224,8 @@ public sealed class RadioDeviceSystem : EntitySystem
             if (speaker.Enabled)
                 active.Channels.Add(prototype.ID);
         }
+
+        _studioRadio.RefreshReceiver(uid);
     }
 
     /// Forge-Change-End
@@ -245,7 +251,7 @@ public sealed class RadioDeviceSystem : EntitySystem
 
     private void OnListen(EntityUid uid, RadioMicrophoneComponent component, ListenEvent args)
     {
-        if (HasComp<RadioSpeakerComponent>(args.Source))
+        if (HasComp<RadioSpeakerComponent>(args.Source) || HasComp<StudioTapeDeckComponent>(args.Source))
             return; // no feedback loops please.
 
         if (_recentlySent.Add((args.Message, args.Source)))
@@ -265,15 +271,18 @@ public sealed class RadioDeviceSystem : EntitySystem
         var nameEv = new TransformSpeakerNameEvent(args.MessageSource, Name(args.MessageSource));
         RaiseLocalEvent(args.MessageSource, nameEv);
 
+        object originalName = HasComp<StudioTapeDeckComponent>(args.MessageSource)
+            ? nameEv.VoiceName
+            : nameEv.Sender;
         var name = Loc.GetString("speech-name-relay", ("speaker", args.Channel.LocalizedName),
-            ("originalName", nameEv.Sender));
+            ("originalName", originalName));
 
         // Borgs relay radio speech with their own synthetic voice. Do not overwrite it
         // with the sender's voice, as that would also change their subsequent speech.
-        if (_cfg.GetCVar(CorvaxVars.TTSEnabled) && !HasComp<BorgChassisComponent>(uid)) // Forge-Change
+        if (_cfg.GetCVar(CorvaxVars.TTSEnabled) && !HasComp<BorgChassisComponent>(uid) &&
+            TryComp<TTSComponent>(uid, out var radTtsComp) &&
+            TryComp<TTSComponent>(args.MessageSource, out var userTtsComp))
         {
-            var radTtsComp = Comp<TTSComponent>(uid);
-            var userTtsComp = Comp<TTSComponent>(args.MessageSource);
             radTtsComp.VoicePrototypeId = userTtsComp.VoicePrototypeId;
             Dirty(uid, radTtsComp);
         }

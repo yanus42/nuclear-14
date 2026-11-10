@@ -28,6 +28,7 @@ public sealed partial class JukeboxMenu : FancyWindow
     /// </summary>
     public event Action<bool>? OnPlayPressed;
     public event Action? OnStopPressed;
+    public event Action? OnBroadcastPressed;
     public event Action<ProtoId<JukeboxPrototype>>? OnSongSelected;
     public event Action<float>? SetTime;
 
@@ -60,6 +61,7 @@ public sealed partial class JukeboxMenu : FancyWindow
         {
             OnStopPressed?.Invoke();
         };
+        BroadcastButton.OnPressed += _ => OnBroadcastPressed?.Invoke();
         PlaybackSlider.OnReleased += PlaybackSliderKeyUp;
 
         SetPlayPauseButton(_audioSystem.IsPlaying(_audio), force: true);
@@ -73,6 +75,13 @@ public sealed partial class JukeboxMenu : FancyWindow
     public void SetAudioStream(EntityUid? audio)
     {
         _audio = audio;
+    }
+
+    public void SetBroadcasting(bool broadcasting)
+    {
+        BroadcastButton.Text = Loc.GetString(broadcasting
+            ? "jukebox-menu-broadcast-stop"
+            : "jukebox-menu-broadcast-start");
     }
 
     private void PlaybackSliderKeyUp(Slider args)
@@ -90,7 +99,10 @@ public sealed partial class JukeboxMenu : FancyWindow
 
         foreach (var entry in jukeboxProtos)
         {
-            MusicList.AddItem(entry.Name, metadata: entry.ID);
+            var name = entry.RadioCompatible
+                ? Loc.GetString("jukebox-broadcast-song-name", ("song", entry.Name))
+                : entry.Name;
+            MusicList.AddItem(name, metadata: entry.ID);
         }
     }
 

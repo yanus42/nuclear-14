@@ -54,6 +54,9 @@
     broadcastChannel: PBS
     toggleOnInteract: true
     frequency: 1667
+  - type: DeviceLinkSink
+    ports:
+    - StudioRadioInput
   - type: Clickable
   - type: InteractionOutline
   - type: WiresVisuals
@@ -100,6 +103,7 @@
     enabled: true
     toggleOnInteract: true
     IsSpeaker: true
+  - type: StudioRadioReceiver
   - type: Tag
     tags:
     - Radio
@@ -127,6 +131,9 @@
     broadcastChannel: PBS
     toggleOnInteract: true
     frequency: 1667
+  - type: DeviceLinkSink
+    ports:
+    - StudioRadioInput
   - type: ActiveRadio
     channels:
     - PBS

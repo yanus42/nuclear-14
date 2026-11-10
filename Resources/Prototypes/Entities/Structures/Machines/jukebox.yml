@@ -22,6 +22,9 @@
   - type: ApcPowerReceiver
     powerLoad: 100
   - type: ExtensionCableReceiver
+  - type: DeviceLinkSource
+    ports:
+    - StudioRadioOutput
   - type: ActivatableUI
     key: enum.JukeboxUiKey.Key
   - type: ActivatableUIRequiresPower

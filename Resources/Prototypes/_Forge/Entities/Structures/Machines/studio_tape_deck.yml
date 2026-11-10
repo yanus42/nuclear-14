@@ -1,0 +1,57 @@
+- type: entity
+  parent: [ BaseMachinePowered, SmallConstructibleMachine ]
+  id: N14StudioTapeDeck
+  name: studio tape deck
+  description: Plays a cassette locally or over a connected studio microphone's radio channel.
+  components:
+  - type: Sprite
+    sprite: _Forge/Structures/Machines/studio_tape_deck.rsi
+    state: icon
+  - type: Machine
+    board: N14StudioTapeDeckCircuitboard
+  - type: ApcPowerReceiver
+    powerLoad: 100
+  - type: Rotatable
+  - type: Appearance
+  - type: StudioTapeDeck
+  - type: TapeRecorder
+  - type: ActiveListener
+    range: 4
+  - type: Speech
+  - type: LanguageSpeaker
+  - type: LanguageKnowledge
+    speaks: [ English ]
+    understands: [ English ]
+  - type: ItemSlots
+    slots:
+      cassette_tape:
+        priority: 4
+        whitelist:
+          components:
+          - FitsInTapeRecorder
+  - type: ContainerContainer
+    containers:
+      cassette_tape: !type:ContainerSlot
+  - type: DeviceLinkSource
+    ports:
+    - StudioRadioOutput
+  - type: ActivatableUI
+    key: enum.TapeRecorderUIKey.Key
+  - type: ActivatableUIRequiresPower
+  - type: UserInterface
+    interfaces:
+      enum.TapeRecorderUIKey.Key:
+        type: TapeRecorderBoundUserInterface
+
+- type: entity
+  parent: BaseMachineCircuitboard
+  id: N14StudioTapeDeckCircuitboard
+  name: studio tape deck board
+  description: A circuit board for a studio tape deck.
+  components:
+  - type: MachineBoard
+    prototype: N14StudioTapeDeck
+    materialRequirements:
+      Steel: 2
+      Glass: 2
+      Cable: 2

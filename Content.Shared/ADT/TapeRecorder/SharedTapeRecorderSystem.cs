@@ -333,7 +333,7 @@ public abstract class SharedTapeRecorderSystem : EntitySystem
     /// </summary>
     /// <param name="ent">The tape recorder to update</param>
     /// <param name="mode">The new mode</param>
-    private void SetMode(Entity<TapeRecorderComponent> ent, TapeRecorderMode mode)
+    protected void SetMode(Entity<TapeRecorderComponent> ent, TapeRecorderMode mode)
     {
         if (mode == ent.Comp.Mode)
             return;

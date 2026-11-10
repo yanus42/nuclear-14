@@ -41,6 +41,7 @@ public sealed class JukeboxBoundUserInterface : BoundUserInterface
             SendMessage(new JukeboxStopMessage());
         };
 
+        _menu.OnBroadcastPressed += () => SendMessage(new JukeboxBroadcastMessage());
         _menu.OnSongSelected += SelectSong;
 
         _menu.SetTime += SetTime;
@@ -57,6 +58,7 @@ public sealed class JukeboxBoundUserInterface : BoundUserInterface
             return;
 
         _menu.SetAudioStream(jukebox.AudioStream);
+        _menu.SetBroadcasting(jukebox.Broadcasting);
 
         if (_protoManager.TryIndex(jukebox.SelectedSongId, out var songProto))
         {

@@ -1,6 +1,8 @@
+using Content.Server._Forge.Radio;
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
 using Content.Shared.Audio.Jukebox;
+using Content.Shared.Popups;
 using Content.Shared.Power;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
@@ -17,6 +19,8 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 {
     [Dependency] private readonly IPrototypeManager _protoManager = default!;
     [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private readonly SharedPopupSystem _popup = default!;
+    [Dependency] private readonly StudioRadioSystem _studioRadio = default!;
 
     public override void Initialize()
     {
@@ -25,6 +29,8 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         SubscribeLocalEvent<JukeboxComponent, JukeboxPlayingMessage>(OnJukeboxPlay);
         SubscribeLocalEvent<JukeboxComponent, JukeboxPauseMessage>(OnJukeboxPause);
         SubscribeLocalEvent<JukeboxComponent, JukeboxStopMessage>(OnJukeboxStop);
+        SubscribeLocalEvent<JukeboxComponent, JukeboxBroadcastMessage>(OnJukeboxBroadcast);
+        SubscribeLocalEvent<JukeboxComponent, StudioMusicEndedEvent>(OnBroadcastEnded);
         SubscribeLocalEvent<JukeboxComponent, JukeboxSetTimeMessage>(OnJukeboxSetTime);
         SubscribeLocalEvent<JukeboxComponent, ComponentInit>(OnComponentInit);
         SubscribeLocalEvent<JukeboxComponent, ComponentShutdown>(OnComponentShutdown);
@@ -41,6 +47,11 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
     }
 
     private void OnJukeboxPlay(EntityUid uid, JukeboxComponent component, ref JukeboxPlayingMessage args)
+    {
+        Play(uid, component);
+    }
+
+    private void Play(EntityUid uid, JukeboxComponent component)
     {
         if (Exists(component.AudioStream))
         {
@@ -68,7 +79,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void OnJukeboxSetTime(EntityUid uid, JukeboxComponent component, JukeboxSetTimeMessage args)
     {
-        if (TryComp(args.Actor, out ActorComponent? actorComp))
+        if (float.IsFinite(args.SongTime) && TryComp(args.Actor, out ActorComponent? actorComp))
         {
             var offset = actorComp.PlayerSession.Channel.Ping * 1.5f / 1000f;
             Audio.SetPlaybackPosition(component.AudioStream, args.SongTime + offset);
@@ -92,14 +103,64 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void Stop(Entity<JukeboxComponent> entity)
     {
+        if (entity.Comp.Broadcasting)
+            _studioRadio.StopMusic(entity);
+
         Audio.SetState(entity.Comp.AudioStream, AudioState.Stopped);
         Dirty(entity);
+    }
+
+    private void OnJukeboxBroadcast(Entity<JukeboxComponent> entity, ref JukeboxBroadcastMessage args)
+    {
+        if (entity.Comp.Broadcasting)
+        {
+            _studioRadio.StopMusic(entity);
+            return;
+        }
+
+        if (!this.IsPowered(entity.Owner, EntityManager))
+            return;
+
+        if (!_studioRadio.TryGetTransmitter(entity, out var transmitter, out var tuning))
+        {
+            _popup.PopupEntity(Loc.GetString("jukebox-broadcast-no-transmitter"), entity, args.Actor);
+            return;
+        }
+
+        if (!_protoManager.TryIndex(entity.Comp.SelectedSongId, out var song) || !song.RadioCompatible)
+        {
+            _popup.PopupEntity(Loc.GetString("jukebox-broadcast-incompatible-song"), entity, args.Actor);
+            return;
+        }
+
+        if (_studioRadio.IsOccupied(tuning))
+        {
+            _popup.PopupEntity(Loc.GetString("jukebox-broadcast-frequency-busy"), entity, args.Actor);
+            return;
+        }
+
+        Play(entity, entity.Comp);
+        if (entity.Comp.AudioStream is not { } audio)
+            return;
+
+        entity.Comp.Broadcasting = true;
+        Dirty(entity);
+        _studioRadio.StartMusic(entity, transmitter, tuning, audio, song.Path);
+    }
+
+    private void OnBroadcastEnded(EntityUid uid, JukeboxComponent jukebox, StudioMusicEndedEvent args)
+    {
+        jukebox.Broadcasting = false;
+        Dirty(uid, jukebox);
     }
 
     private void OnJukeboxSelected(EntityUid uid, JukeboxComponent component, JukeboxSelectedMessage args)
     {
         if (!Audio.IsPlaying(component.AudioStream))
         {
+            if (component.Broadcasting)
+                _studioRadio.StopMusic(uid);
+
             component.SelectedSongId = args.SongId;
             DirectSetVisualState(uid, JukeboxVisualState.Select);
             component.Selecting = true;
@@ -132,6 +193,9 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void OnComponentShutdown(EntityUid uid, JukeboxComponent component, ComponentShutdown args)
     {
+        if (component.Broadcasting)
+            _studioRadio.StopMusic(uid);
+
         component.AudioStream = Audio.Stop(component.AudioStream);
     }
 

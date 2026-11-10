@@ -14,5 +14,6 @@
             <Button Name="StopButton" Text="{Loc 'jukebox-menu-buttonstop'}" />
             <Label Name="DurationLabel" Text="00:00 / 00:00" HorizontalAlignment="Right" HorizontalExpand="True"/>
         </BoxContainer>
+        <Button Name="BroadcastButton" Margin="0 4" HorizontalExpand="True" />
     </BoxContainer>
 </ui:FancyWindow>

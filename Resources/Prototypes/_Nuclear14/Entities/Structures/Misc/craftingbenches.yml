@@ -318,6 +318,7 @@
     #Misc
     - N14TapeRecorder
     - N14CassetteTape
+    - N14StudioTapeDeckCircuitboard
     - N14FlashlightLantern
     - N14GlowstickRed
     - N14CleanGauze1

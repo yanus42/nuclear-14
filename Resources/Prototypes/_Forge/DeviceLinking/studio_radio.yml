@@ -1,0 +1,10 @@
+- type: sourcePort
+  id: StudioRadioOutput
+  name: studio-radio-output-name
+  description: studio-radio-output-desc
+  defaultLinks: [ StudioRadioInput ]
+
+- type: sinkPort
+  id: StudioRadioInput
+  name: studio-radio-input-name
+  description: studio-radio-input-desc

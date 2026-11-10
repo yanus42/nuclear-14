@@ -1,12 +1,16 @@
 ﻿using Content.Server.Chat.Systems;
+using Content.Server._Forge.Radio;
 using Content.Server.Hands.Systems;
 using Content.Server.Language;
 using Content.Server.Paper;
+using Content.Server.Radio.EntitySystems;
 using Content.Server.Speech;
+using Content.Server.Speech.Components;
 using Content.Shared.Chat;
 using Content.Shared.Language;
 using Content.Shared.Language.Systems;
 using Content.Shared.Paper;
+using Content.Shared.Power;
 using Content.Shared.Speech;
 using Content.Shared.ADT.TapeRecorder;
 using Content.Shared.ADT.TapeRecorder.Components;
@@ -25,6 +29,8 @@ public sealed class TapeRecorderSystem : SharedTapeRecorderSystem
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly PaperSystem _paper = default!;
     [Dependency] private readonly LanguageSystem _language = default!;
+    [Dependency] private readonly RadioSystem _radio = default!;
+    [Dependency] private readonly StudioRadioSystem _studioRadio = default!;
 
     public override void Initialize()
     {
@@ -32,6 +38,13 @@ public sealed class TapeRecorderSystem : SharedTapeRecorderSystem
 
         SubscribeLocalEvent<TapeRecorderComponent, ListenEvent>(OnListen);
         SubscribeLocalEvent<TapeRecorderComponent, PrintTapeRecorderMessage>(OnPrintMessage);
+        SubscribeLocalEvent<TapeRecorderComponent, PowerChangedEvent>(OnDeckPowerChanged);
+    }
+
+    private void OnDeckPowerChanged(Entity<TapeRecorderComponent> recorder, ref PowerChangedEvent args)
+    {
+        if (!args.Powered && HasComp<StudioTapeDeckComponent>(recorder))
+            SetMode(recorder, TapeRecorderMode.Stopped);
     }
 
     /// <summary>
@@ -64,10 +77,29 @@ public sealed class TapeRecorderSystem : SharedTapeRecorderSystem
             var verb = message.Verb ?? SharedChatSystem.DefaultSpeechVerb;
             speech.SpeechVerb = _proto.Index(verb);
 
-            var language = message.Language ?? SharedLanguageSystem.Universal;
+            var language = _proto.Index(message.Language ?? SharedLanguageSystem.Universal);
+            var name = message.Name ?? Loc.GetString(ent.Comp.DefaultName);
 
-            //Play the message
-            _chat.TrySendInGameICMessage(ent, message.Message, InGameICChatType.Speak, ChatTransmitRange.Normal, nameOverride: message.Name ?? ent.Comp.DefaultName, languageOverride: _proto.Index(language));
+            if (HasComp<StudioTapeDeckComponent>(ent) &&
+                _studioRadio.TryGetTransmitter(ent, out var transmitter, out var tuning))
+            {
+                var voice = EnsureComp<VoiceOverrideComponent>(ent);
+                var previousName = voice.NameOverride;
+                voice.NameOverride = name;
+                try
+                {
+                    _radio.SendRadioMessage(ent, message.Message, tuning.Channel, transmitter, tuning.Frequency, language);
+                }
+                finally
+                {
+                    voice.NameOverride = previousName;
+                }
+            }
+            else
+            {
+                _chat.TrySendInGameICMessage(ent, message.Message, InGameICChatType.Speak, ChatTransmitRange.Normal,
+                    nameOverride: name, languageOverride: language);
+            }
 
             RemComp<SpeechSynthesisComponent>(ent);
             RemComp<TTSComponent>(ent);
