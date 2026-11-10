@@ -199,14 +199,16 @@ public sealed class StudioRadioSystem : EntitySystem
     private bool CanListen(EntityUid receiver, string channel, out EntityUid? listener)
     {
         listener = null;
+        if (!TryComp<RadioSpeakerComponent>(receiver, out var speaker) || !speaker.Enabled)
+            return false;
+
         if (TryComp<PipBoyRadioWearerComponent>(receiver, out var pipBoy))
         {
             listener = pipBoy.WearerUid;
             return pipBoy.StudioMusicEnabled && HasComp<ActorComponent>(listener);
         }
 
-        return TryComp<RadioSpeakerComponent>(receiver, out var speaker) && speaker.Enabled &&
-               TryComp<ActiveRadioComponent>(receiver, out var radio) && radio.Channels.Contains(channel);
+        return TryComp<ActiveRadioComponent>(receiver, out var radio) && radio.Channels.Contains(channel);
     }
 
     private bool TryGetSourceAudio(MusicBroadcast broadcast, [NotNullWhen(true)] out AudioComponent? audio)

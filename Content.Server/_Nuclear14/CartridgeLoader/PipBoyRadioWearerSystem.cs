@@ -1,5 +1,6 @@
 using Content.Server._Forge.Radio;
 using Content.Server._Nuclear14.CartridgeLoader.Cartridges;
+using Content.Server.CartridgeLoader;
 using Content.Shared.CartridgeLoader;
 using Content.Shared.Inventory.Events;
 using Robust.Shared.Audio.Systems;
@@ -9,6 +10,7 @@ namespace Content.Server._Nuclear14.CartridgeLoader;
 public sealed class PipBoyRadioWearerSystem : EntitySystem
 {
     [Dependency] private readonly SharedAudioSystem _audio = default!;
+    [Dependency] private readonly CartridgeLoaderSystem _loader = default!;
     [Dependency] private readonly StudioRadioSystem _studio = default!;
 
     public override void Initialize()
@@ -25,7 +27,7 @@ public sealed class PipBoyRadioWearerSystem : EntitySystem
         GotEquippedEvent args)
     {
         component.WearerUid = args.Equipee;
-        _studio.RefreshReceiver(uid);
+        SetStudioMusicEnabled(uid, _loader.HasProgram<PipBoyReceiverCartridgeComponent>(uid), component);
     }
 
     private void OnUnequipped(

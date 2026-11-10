@@ -9,6 +9,7 @@ namespace Content.Client._Forge.Radio;
 
 public sealed class StudioRadioBoundUserInterface(EntityUid owner, Enum uiKey) : BoundUserInterface(owner, uiKey)
 {
+    private static readonly Color SelectedStationColor = Color.FromHex("#47734C");
     private BoxContainer? _stations;
 
     protected override void Open()
@@ -32,10 +33,12 @@ public sealed class StudioRadioBoundUserInterface(EntityUid owner, Enum uiKey) :
             if (!prototypes.TryIndex(id, out var channel))
                 continue;
 
+            var selected = channel.ID == radio.Channel;
             var button = new Button
             {
                 Text = Loc.GetString("studio-radio-station", ("name", channel.LocalizedName), ("frequency", channel.Frequency)),
-                Disabled = channel.ID == radio.Channel,
+                Disabled = selected,
+                ModulateSelfOverride = selected ? SelectedStationColor : null,
                 HorizontalExpand = true,
             };
             button.OnPressed += _ => SendMessage(new StudioRadioSelectChannelMessage(id));

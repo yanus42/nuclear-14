@@ -7,13 +7,8 @@ using Robust.Shared.Serialization;
 namespace Content.Shared._Nuclear14.CartridgeLoader.Cartridges;
 
 [Serializable, NetSerializable]
-public sealed class PipBoyReceiverUiMessageEvent(
-    ProtoId<RadioChannelPrototype>? channel = null,
-    bool? enabled = null,
-    bool? musicEnabled = null) : CartridgeMessageEvent
+public sealed class PipBoyReceiverUiMessageEvent(ProtoId<RadioChannelPrototype> channel) : CartridgeMessageEvent
 {
-    public readonly ProtoId<RadioChannelPrototype>? Channel = channel;
-    public readonly bool? Enabled = enabled;
-    public readonly bool? MusicEnabled = musicEnabled;
+    public readonly ProtoId<RadioChannelPrototype> Channel = channel;
 }
 /// Forge-Change-End

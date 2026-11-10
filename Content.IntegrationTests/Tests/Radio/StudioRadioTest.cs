@@ -204,9 +204,10 @@ public sealed class StudioRadioTest
                 var personal = entities.GetComponent<PipBoyRadioCartridgeComponent>(player);
                 Assert.That(personal.Playing, Is.True);
 
-                SendCartridge(entities, receiver, pipBoy, jukebox, new PipBoyReceiverUiMessageEvent("PBS", musicEnabled: true));
+                SendCartridge(entities, receiver, pipBoy, jukebox, new PipBoyReceiverUiMessageEvent("PBS"));
                 Assert.That(ReceiverAudio(entities, pipBoy), Is.Null);
-                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent("PBS", musicEnabled: true));
+                Assert.That(entities.GetComponent<RadioSpeakerComponent>(pipBoy).Enabled, Is.False);
+                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent("PBS"));
                 var stream = ReceiverAudio(entities, pipBoy);
                 Assert.That(stream?.IncludedEntities, Is.EquivalentTo(new[] { wearer }));
                 Assert.That(stream!.FileName, Does.EndWith("MUS_Big_Iron.radio-mono.ogg"));
@@ -221,7 +222,16 @@ public sealed class StudioRadioTest
                 Assert.That(personal.Playing, Is.True);
                 Assert.That(ReceiverAudio(entities, pipBoy), Is.Null);
 
-                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent(musicEnabled: true));
+                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent("PBS"));
+                Assert.That(entities.GetComponent<RadioSpeakerComponent>(pipBoy).Enabled, Is.False);
+                Assert.That(personal.Playing, Is.True);
+                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent("PBS"));
+                Assert.That(entities.GetComponent<RadioSpeakerComponent>(pipBoy).Enabled, Is.True);
+                Assert.That(personal.Paused, Is.True);
+                Assert.That(ReceiverAudio(entities, pipBoy), Is.Not.Null);
+                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent("PBS"));
+                Assert.That(ReceiverAudio(entities, pipBoy), Is.Null);
+                SendCartridge(entities, receiver, pipBoy, wearer, new PipBoyReceiverUiMessageEvent("PBS"));
                 Assert.That(ReceiverAudio(entities, pipBoy), Is.Not.Null);
                 Assert.That(inventory.TryUnequip(wearer, "id", silent: true, force: true), Is.True);
                 Assert.That(ReceiverAudio(entities, pipBoy), Is.Null);

@@ -29,33 +29,34 @@ public sealed class PipBoyReceiverCartridgeSystem : EntitySystem
 
     private void OnUiMessage(EntityUid uid, PipBoyReceiverCartridgeComponent component, CartridgeMessageEvent args)
     {
-        if (args is not PipBoyReceiverUiMessageEvent message)
+        if (args is not PipBoyReceiverUiMessageEvent message || !component.Channels.Contains(message.Channel))
             return;
 
         var receiver = GetEntity(args.LoaderUid);
-        if (!HasComp<RadioSpeakerComponent>(receiver) || !HasComp<RadioMicrophoneComponent>(receiver))
+        if (!TryComp<RadioSpeakerComponent>(receiver, out var speaker) ||
+            !TryComp<RadioMicrophoneComponent>(receiver, out var microphone) ||
+            !TryComp<PipBoyRadioWearerComponent>(receiver, out var wearer) ||
+            (wearer.WearerUid is { } owner && owner != args.Actor))
             return;
 
-        if (message.Channel is { } channel && component.Channels.Contains(channel))
-            _radio.SetReceiverChannel(receiver, channel);
-
-        if (message.Enabled is { } enabled)
-            _radio.SetSpeakerEnabled(receiver, args.Actor, enabled, quiet: true);
-
-        if (message.MusicEnabled is { } music &&
-            TryComp<PipBoyRadioWearerComponent>(receiver, out var wearer) && wearer.WearerUid == args.Actor)
+        var enabled = !speaker.Enabled || microphone.BroadcastChannel != message.Channel.Id;
+        if (enabled)
         {
-            if (music)
-                _player.PauseForStudioMusic(receiver);
-
-            _wearers.SetStudioMusicEnabled(receiver, music, wearer);
+            _radio.SetReceiverChannel(receiver, message.Channel);
+            _player.PauseForStudioMusic(receiver);
         }
+
+        _radio.SetSpeakerEnabled(receiver, args.Actor, enabled, quiet: true, component: speaker);
+        _wearers.SetStudioMusicEnabled(receiver, enabled, wearer);
 
         UpdateUi(receiver, component);
     }
 
     private void OnRemoved(Entity<PipBoyReceiverCartridgeComponent> cartridge, ref CartridgeRemovedEvent args)
     {
+        if (TryComp<RadioSpeakerComponent>(args.Loader, out var speaker))
+            _radio.SetSpeakerEnabled(args.Loader, null, false, quiet: true, component: speaker);
+
         _wearers.SetStudioMusicEnabled(args.Loader, false);
     }
 
@@ -65,9 +66,8 @@ public sealed class PipBoyReceiverCartridgeSystem : EntitySystem
             !TryComp<RadioMicrophoneComponent>(receiver, out var microphone))
             return;
 
-        var music = TryComp<PipBoyRadioWearerComponent>(receiver, out var wearer) && wearer.StudioMusicEnabled;
         _loader.UpdateCartridgeUiState(receiver,
-            new PipBoyReceiverUiState(component.Channels, microphone.BroadcastChannel, speaker.Enabled, music));
+            new PipBoyReceiverUiState(component.Channels, microphone.BroadcastChannel, speaker.Enabled));
     }
 }
 /// Forge-Change-End
