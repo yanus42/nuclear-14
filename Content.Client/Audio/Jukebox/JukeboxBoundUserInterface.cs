@@ -41,7 +41,7 @@ public sealed class JukeboxBoundUserInterface : BoundUserInterface
             SendMessage(new JukeboxStopMessage());
         };
 
-        _menu.OnBroadcastPressed += () => SendMessage(new JukeboxBroadcastMessage());
+        _menu.OnBroadcastPressed += () => SendMessage(new JukeboxBroadcastMessage()); // Forge-Change
         _menu.OnSongSelected += SelectSong;
 
         _menu.SetTime += SetTime;
@@ -58,11 +58,11 @@ public sealed class JukeboxBoundUserInterface : BoundUserInterface
             return;
 
         _menu.SetAudioStream(jukebox.AudioStream);
-        _menu.SetBroadcasting(jukebox.Broadcasting);
+        _menu.SetBroadcasting(jukebox.Broadcasting); // Forge-Change
 
         if (_protoManager.TryIndex(jukebox.SelectedSongId, out var songProto))
         {
-            var length = EntMan.System<AudioSystem>().GetAudioLength(songProto.PositionalPath.Path.ToString());
+            var length = EntMan.System<AudioSystem>().GetAudioLength(songProto.PositionalPath.Path.ToString()); // Forge-Change
             _menu.SetSelectedSong(songProto.Name, (float) length.TotalSeconds);
         }
         else

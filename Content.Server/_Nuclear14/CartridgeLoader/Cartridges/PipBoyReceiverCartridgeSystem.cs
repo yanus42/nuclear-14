@@ -58,8 +58,7 @@ public sealed class PipBoyReceiverCartridgeSystem : EntitySystem
             !TryComp<RadioMicrophoneComponent>(receiver, out var microphone))
             return;
 
-        _loader.UpdateCartridgeUiState(receiver,
-            new PipBoyReceiverUiState(component.Channels, microphone.BroadcastChannel, speaker.Enabled));
+        _loader.UpdateCartridgeUiState(receiver, new PipBoyReceiverUiState(component.Channels, microphone.BroadcastChannel, speaker.Enabled));
     }
 }
 /// Forge-Change-End

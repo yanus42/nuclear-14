@@ -21,6 +21,7 @@ public sealed partial class JukeboxPrototype : IPrototype
     [DataField(required: true)]
     public SoundPathSpecifier Path = default!;
 
+    // Forge-Change-Start
     /// <summary>
     /// Mono recording for the jukebox and nearby radios when the original track is stereo.
     /// </summary>
@@ -28,4 +29,5 @@ public sealed partial class JukeboxPrototype : IPrototype
     public SoundPathSpecifier? MonoPath;
 
     public SoundPathSpecifier PositionalPath => MonoPath ?? Path;
+    // Forge-Change-End
 }

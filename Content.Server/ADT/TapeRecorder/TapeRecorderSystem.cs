@@ -1,16 +1,16 @@
 ﻿using Content.Server.Chat.Systems;
-using Content.Server._Forge.Radio;
+using Content.Server._Forge.Radio; // Forge-Change
 using Content.Server.Hands.Systems;
 using Content.Server.Language;
 using Content.Server.Paper;
-using Content.Server.Radio.EntitySystems;
-using Content.Server.Speech;
+using Content.Server.Radio.EntitySystems; // Forge-Change
+using Content.Server.Speech; // Forge-Change
 using Content.Server.Speech.Components;
 using Content.Shared.Chat;
 using Content.Shared.Language;
 using Content.Shared.Language.Systems;
 using Content.Shared.Paper;
-using Content.Shared.Power;
+using Content.Shared.Power; // Forge-Change
 using Content.Shared.Speech;
 using Content.Shared.ADT.TapeRecorder;
 using Content.Shared.ADT.TapeRecorder.Components;
@@ -29,8 +29,8 @@ public sealed class TapeRecorderSystem : SharedTapeRecorderSystem
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly PaperSystem _paper = default!;
     [Dependency] private readonly LanguageSystem _language = default!;
-    [Dependency] private readonly RadioSystem _radio = default!;
-    [Dependency] private readonly StudioRadioSystem _studioRadio = default!;
+    [Dependency] private readonly RadioSystem _radio = default!; // Forge-Change
+    [Dependency] private readonly StudioRadioSystem _studioRadio = default!; // Forge-Change
 
     public override void Initialize()
     {
@@ -38,14 +38,16 @@ public sealed class TapeRecorderSystem : SharedTapeRecorderSystem
 
         SubscribeLocalEvent<TapeRecorderComponent, ListenEvent>(OnListen);
         SubscribeLocalEvent<TapeRecorderComponent, PrintTapeRecorderMessage>(OnPrintMessage);
-        SubscribeLocalEvent<TapeRecorderComponent, PowerChangedEvent>(OnDeckPowerChanged);
+        SubscribeLocalEvent<TapeRecorderComponent, PowerChangedEvent>(OnDeckPowerChanged); // Forge-Change
     }
 
+    // Forge-Change-Start
     private void OnDeckPowerChanged(Entity<TapeRecorderComponent> recorder, ref PowerChangedEvent args)
     {
         if (!args.Powered && HasComp<StudioTapeDeckComponent>(recorder))
             SetMode(recorder, TapeRecorderMode.Stopped);
     }
+    // Forge-Change-End
 
     /// <summary>
     /// Given a time range, play all messages on a tape within said range, [start, end).
@@ -77,6 +79,7 @@ public sealed class TapeRecorderSystem : SharedTapeRecorderSystem
             var verb = message.Verb ?? SharedChatSystem.DefaultSpeechVerb;
             speech.SpeechVerb = _proto.Index(verb);
 
+            // Forge-Change-Start
             var language = _proto.Index(message.Language ?? SharedLanguageSystem.Universal);
             var name = message.Name ?? Loc.GetString(ent.Comp.DefaultName);
 
@@ -97,9 +100,9 @@ public sealed class TapeRecorderSystem : SharedTapeRecorderSystem
             }
             else
             {
-                _chat.TrySendInGameICMessage(ent, message.Message, InGameICChatType.Speak, ChatTransmitRange.Normal,
-                    nameOverride: name, languageOverride: language);
+                _chat.TrySendInGameICMessage(ent, message.Message, InGameICChatType.Speak, ChatTransmitRange.Normal, nameOverride: name, languageOverride: language);
             }
+            // Forge-Change-End
 
             RemComp<SpeechSynthesisComponent>(ent);
             RemComp<TTSComponent>(ent);

@@ -5,7 +5,7 @@
   name: Louis Armstrong - A Kiss to Build A Dream On
   path:
     path: /Audio/_Nuclear14/Lobby/a_kiss_to_build_a_dream_on.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Lobby/a_kiss_to_build_a_dream_on.radio-mono.ogg
 
 - type: jukebox
@@ -13,7 +13,7 @@
   name: Dean Martin - Ain't That A Kick In The Head
   path:
     path: /Audio/_Nuclear14/Lobby/MUS_Aint_That_A_Kick_In_the_Head.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Lobby/MUS_Aint_That_A_Kick_In_the_Head.radio-mono.ogg
 
 - type: jukebox
@@ -21,7 +21,7 @@
   name: Gerhard Trede - American Swing
   path:
     path: /Audio/_Nuclear14/Lobby/MUS_American_Swing.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Lobby/MUS_American_Swing.radio-mono.ogg
     
 - type: jukebox
@@ -29,7 +29,7 @@
   name: Marty Robins - Big Iron
   path:
     path: /Audio/_Nuclear14/Lobby/MUS_Big_Iron.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Lobby/MUS_Big_Iron.radio-mono.ogg
     
 - type: jukebox
@@ -37,7 +37,7 @@
   name: Kay Kyser - Jingle Jangle Jingle
   path:
     path: /Audio/_Nuclear14/Lobby/MUS_Jingle_Jangle_Jingle.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Lobby/MUS_Jingle_Jangle_Jingle.radio-mono.ogg
     
 - type: jukebox
@@ -45,7 +45,7 @@
   name: Georges Tesperin - Joe Cool
   path:
     path: /Audio/_Nuclear14/Lobby/MUS_Joe_Cool_CAS.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Lobby/MUS_Joe_Cool_CAS.radio-mono.ogg
     
 - type: jukebox
@@ -53,7 +53,7 @@
   name: Peggy Lee - Johnny Guitar
   path:
     path: /Audio/_Nuclear14/Lobby/MUS_Johnny_Guitar.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Lobby/MUS_Johnny_Guitar.radio-mono.ogg
     
 - type: jukebox
@@ -61,7 +61,7 @@
   name: Bing Crosby - Something's Gotta Give
   path:
     path: /Audio/_Nuclear14/Lobby/MUS_Somethings_Gotta_Give.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Lobby/MUS_Somethings_Gotta_Give.radio-mono.ogg
 
 # Music/Fallout3
@@ -160,7 +160,7 @@
   name: Al Rex - Hydroden Bomb
   path:
     path: /Audio/_Nuclear14/Music/Fallout3/mus_al_rex_hydrogen_bomb_mono.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/Fallout3/mus_al_rex_hydrogen_bomb_mono.radio-mono.ogg
     
 - type: jukebox #Forge-Change
@@ -168,7 +168,7 @@
   name: Mitch Miller - I'm Looking Over A Four Leaf Clover
   path:
     path: /Audio/_Nuclear14/Music/Fallout3/mus_mitch_miller_im_looking_over_a_four_leaf_clover_mono.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/Fallout3/mus_mitch_miller_im_looking_over_a_four_leaf_clover_mono.radio-mono.ogg
     
 - type: jukebox #Forge-Change
@@ -176,7 +176,7 @@
   name: Tennessee Ernie Ford - Sixteen Tons
   path:
     path: /Audio/_Nuclear14/Music/Fallout3/mus_tennessee_ernie_ford_sixteen_tons_mono.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/Fallout3/mus_tennessee_ernie_ford_sixteen_tons_mono.radio-mono.ogg
     
 - type: jukebox #Forge-Change
@@ -184,7 +184,7 @@
   name: Battle Hymn of the Republic
   path:
     path: /Audio/_Nuclear14/Music/Fallout3/mus_battle_hymn_of_the_republic_mono.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/Fallout3/mus_battle_hymn_of_the_republic_mono.radio-mono.ogg
     
 - type: jukebox #Forge-Change
@@ -192,7 +192,7 @@
   name: Hanny Williams - The Yellow Rose of Texas
   path:
     path: /Audio/_Nuclear14/Music/Fallout3/mus_hanny_williams_the_yellow_rose_of_texas_mono.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/Fallout3/mus_hanny_williams_the_yellow_rose_of_texas_mono.radio-mono.ogg
     
 - type: jukebox #Forge-Change
@@ -200,7 +200,7 @@
   name: Elton Britt - Uranium Fever
   path:
     path: /Audio/_Nuclear14/Music/Fallout3/mus_elton_britt_uranium_fever_mono.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/Fallout3/mus_elton_britt_uranium_fever_mono.radio-mono.ogg
     
 - type: jukebox #Forge-Change
@@ -208,7 +208,7 @@
   name: Terrible Tom - Boss Nigger
   path:
     path: /Audio/_Nuclear14/Music/Fallout3/mus_terrible_tom_boss_nigger_mono.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/Fallout3/mus_terrible_tom_boss_nigger_mono.radio-mono.ogg
     
 - type: jukebox #Forge-Change
@@ -216,7 +216,7 @@
   name: Dion - The Wanderer
   path:
     path: /Audio/_Nuclear14/Music/Fallout3/mus_dion_the_wanderer_mono.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/Fallout3/mus_dion_the_wanderer_mono.radio-mono.ogg
     
 - type: jukebox #Forge-Change
@@ -224,7 +224,7 @@
   name: Frank Sinatra - That's Life
   path:
     path: /Audio/_Nuclear14/Music/Fallout3/mus_frank_sinatra_thats_life_mono.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/Fallout3/mus_frank_sinatra_thats_life_mono.radio-mono.ogg
     
 # Music - Enclave
@@ -233,7 +233,7 @@
   name: Patriotic America
   path:
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_America.ogg 
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_America.radio-mono.ogg
     
 - type: jukebox
@@ -247,7 +247,7 @@
   name: Patriotic Dixie
   path:
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Dixie.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Dixie.radio-mono.ogg
     
 - type: jukebox
@@ -255,7 +255,7 @@
   name: Patriotic Montezuma
   path:
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Montezuma.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Montezuma.radio-mono.ogg
     
 - type: jukebox
@@ -263,7 +263,7 @@
   name: Patriotic Presidential
   path:
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Presidential.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Presidential.radio-mono.ogg
     
 - type: jukebox
@@ -271,7 +271,7 @@
   name: Patriotic Stars
   path:
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Stars.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Stars.radio-mono.ogg
     
 - type: jukebox
@@ -279,7 +279,7 @@
   name: Patriotic Washington
   path:
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Washington.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Washington.radio-mono.ogg
     
 - type: jukebox
@@ -287,7 +287,7 @@
   name: Patriotic Yankee
   path:
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Yankee.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Music/MUS_Patriotic_Yankee.radio-mono.ogg
 # Additional Wasteland Music
 
@@ -296,7 +296,7 @@
   name: Lonesome Valley
   path:
     path: /Audio/_Nuclear14/Jukebox/LonesomeValley.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/LonesomeValley.radio-mono.ogg
 
 - type: jukebox
@@ -304,7 +304,7 @@
   name: Shenandoah
   path:
     path: /Audio/_Nuclear14/Jukebox/shenandoah.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/shenandoah.radio-mono.ogg
 
 - type: jukebox
@@ -312,7 +312,7 @@
   name: St. Louis Blues
   path:
     path: /Audio/_Nuclear14/Jukebox/StLouisBlues.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/StLouisBlues.radio-mono.ogg
 
 - type: jukebox
@@ -320,7 +320,7 @@
   name: White House Blues
   path:
     path: /Audio/_Nuclear14/Jukebox/WhiteHouseBlues.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/WhiteHouseBlues.radio-mono.ogg
 
 # Additional Fallout radio music
@@ -330,7 +330,7 @@
   name: Ol' Man Mose
   path:
     path: /Audio/_Nuclear14/Jukebox/OlManMose.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/OlManMose.radio-mono.ogg
 
 - type: jukebox
@@ -338,7 +338,7 @@
   name: Mister Five By Five
   path:
     path: /Audio/_Nuclear14/Jukebox/MisterFiveByFive.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/MisterFiveByFive.radio-mono.ogg
 
 - type: jukebox
@@ -346,7 +346,7 @@
   name: Just a Fair Weather Friend
   path:
     path: /Audio/_Nuclear14/Jukebox/JustAFairWeatherFriend.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/JustAFairWeatherFriend.radio-mono.ogg
 
 - type: jukebox
@@ -354,7 +354,7 @@
   name: Praise the Lord and Pass the Ammunition
   path:
     path: /Audio/_Nuclear14/Jukebox/PraiseTheLordAndPassTheAmmunition.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/PraiseTheLordAndPassTheAmmunition.radio-mono.ogg
 
 - type: jukebox
@@ -362,7 +362,7 @@
   name: Straighten Up and Fly Right
   path:
     path: /Audio/_Nuclear14/Jukebox/StraightenUpAndFlyRight.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/StraightenUpAndFlyRight.radio-mono.ogg
 
 - type: jukebox
@@ -370,7 +370,7 @@
   name: Into Each Life Some Rain Must Fall
   path:
     path: /Audio/_Nuclear14/Jukebox/IntoEachLifeSomeRainMustFall.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/IntoEachLifeSomeRainMustFall.radio-mono.ogg
 
 - type: jukebox
@@ -378,5 +378,5 @@
   name: Grandma Plays the Numbers
   path:
     path: /Audio/_Nuclear14/Jukebox/GrandmaPlaysTheNumbers.ogg
-  monoPath:
+  monoPath: # Forge-Change
     path: /Audio/_Nuclear14/Jukebox/GrandmaPlaysTheNumbers.radio-mono.ogg

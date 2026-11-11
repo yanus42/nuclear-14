@@ -1,3 +1,4 @@
+// Forge-Change-Start
 using Content.Server._Forge.Radio;
 using Content.Shared.Inventory.Events;
 
@@ -15,21 +16,16 @@ public sealed class PipBoyRadioWearerSystem : EntitySystem
         SubscribeLocalEvent<PipBoyRadioWearerComponent, GotUnequippedEvent>(OnUnequipped);
     }
 
-    private void OnEquipped(
-        EntityUid uid,
-        PipBoyRadioWearerComponent component,
-        GotEquippedEvent args)
+    private void OnEquipped(EntityUid uid, PipBoyRadioWearerComponent component, GotEquippedEvent args)
     {
         component.WearerUid = args.Equipee;
         _studio.RefreshReceiver(uid);
     }
 
-    private void OnUnequipped(
-        EntityUid uid,
-        PipBoyRadioWearerComponent component,
-        GotUnequippedEvent args)
+    private void OnUnequipped(EntityUid uid, PipBoyRadioWearerComponent component, GotUnequippedEvent args)
     {
         component.WearerUid = null;
         _studio.RefreshReceiver(uid);
     }
 }
+// Forge-Change-End

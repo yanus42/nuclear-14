@@ -14,8 +14,10 @@ public sealed partial class JukeboxComponent : Component
     [DataField, AutoNetworkedField]
     public EntityUid? AudioStream;
 
+    // Forge-Change-Start
     [AutoNetworkedField]
     public bool Broadcasting;
+    // Forge-Change-End
 
     /// <summary>
     /// RSI state for the jukebox being on.
@@ -52,7 +54,7 @@ public sealed class JukeboxPauseMessage : BoundUserInterfaceMessage;
 public sealed class JukeboxStopMessage : BoundUserInterfaceMessage;
 
 [Serializable, NetSerializable]
-public sealed class JukeboxBroadcastMessage : BoundUserInterfaceMessage;
+public sealed class JukeboxBroadcastMessage : BoundUserInterfaceMessage; // Forge-Change
 
 [Serializable, NetSerializable]
 public sealed class JukeboxSelectedMessage(ProtoId<JukeboxPrototype> songId) : BoundUserInterfaceMessage

@@ -22,9 +22,11 @@
   - type: ApcPowerReceiver
     powerLoad: 100
   - type: ExtensionCableReceiver
+  # Forge-Change-Start
   - type: DeviceLinkSource
     ports:
     - StudioRadioOutput
+  # Forge-Change-End
   - type: ActivatableUI
     key: enum.JukeboxUiKey.Key
   - type: ActivatableUIRequiresPower

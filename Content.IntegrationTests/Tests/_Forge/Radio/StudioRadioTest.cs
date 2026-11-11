@@ -1,6 +1,8 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
+using Content.Client._Forge.Radio;
+using Content.Client._Nuclear14.CartridgeLoader.Cartridges;
 using Content.Client.UserInterface.Systems.Chat;
 using Content.Server._Forge.Radio;
 using Content.Server._Nuclear14.CartridgeLoader.Cartridges;
@@ -20,6 +22,7 @@ using Content.Shared.DeviceLinking;
 using Content.Shared.Inventory;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Components;
 using Robust.Shared.GameObjects;
@@ -28,7 +31,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
-namespace Content.IntegrationTests.Tests.Radio;
+namespace Content.IntegrationTests.Tests._Forge.Radio;
 
 [TestFixture]
 public sealed class StudioRadioTest
@@ -162,6 +165,36 @@ public sealed class StudioRadioTest
     {
         await using var pair = await PoolManager.GetServerClient(new PoolSettings { Connected = true, Dirty = true });
         var (server, client) = pair;
+        await client.WaitAssertion(() =>
+        {
+            using var ui = new StudioRadioBoundUserInterface(EntityUid.Invalid, StudioRadioUiKey.Key);
+            var fragment = new PipBoyReceiverUi();
+            fragment.Setup(ui, null);
+            fragment.UpdateState(new PipBoyReceiverUiState(new(StudioRadioChannels.Public), "PBS", true));
+            var root = fragment.GetUIFragmentRoot();
+            var stations = root.Children.OfType<BoxContainer>().Single();
+            var buttons = stations.Children.Cast<Button>().ToArray();
+            Assert.That(buttons, Has.Length.EqualTo(3));
+            Assert.That(buttons[0].Pressed, Is.True);
+
+            fragment.UpdateState(new PipBoyReceiverUiState(new(StudioRadioChannels.Public), "Bazar", true));
+            Assert.That(stations.Children.First(), Is.SameAs(buttons[0]));
+            Assert.That(buttons[0].Pressed, Is.False);
+            Assert.That(buttons[2].Pressed, Is.True);
+            fragment.Setup(ui, null);
+            Assert.That(fragment.GetUIFragmentRoot(), Is.SameAs(root));
+
+            fragment.UpdateState(new PipBoyReceiverUiState(["PBS"], "PBS", false));
+            Assert.That(buttons.All(button => button.Disposed), Is.True);
+            Assert.That(stations.Children.Cast<Button>().Single().Pressed, Is.False);
+            root.Dispose();
+
+            fragment.Setup(ui, null);
+            fragment.UpdateState(new PipBoyReceiverUiState(new(StudioRadioChannels.Public), "Wasteland", true));
+            var reopened = fragment.GetUIFragmentRoot();
+            Assert.That(reopened.Children.OfType<BoxContainer>().Single().ChildCount, Is.EqualTo(3));
+            reopened.Dispose();
+        });
         var map = await pair.CreateTestMap();
         var entities = server.EntMan;
         var links = server.System<SharedDeviceLinkSystem>();

@@ -1,5 +1,5 @@
 using System.Linq;
-using Content.Server._Forge.Radio;
+using Content.Server._Forge.Radio; // Forge-Change
 using Content.Server.Chat.Systems;
 using Content.Server.Interaction;
 using Content.Server.Language;
@@ -45,7 +45,7 @@ public sealed class RadioDeviceSystem : EntitySystem
     [Dependency] private readonly LanguageSystem _language = default!;
     [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
     [Dependency] private readonly IConfigurationManager _cfg = default!; // Forge-Change
-    [Dependency] private readonly StudioRadioSystem _studioRadio = default!;
+    [Dependency] private readonly StudioRadioSystem _studioRadio = default!; // Forge-Change
 
     // Used to prevent a shitter from using a bunch of radios to spam chat.
     private HashSet<(string, EntityUid)> _recentlySent = new();
@@ -198,7 +198,7 @@ public sealed class RadioDeviceSystem : EntitySystem
         else
             RemCompDeferred<ActiveRadioComponent>(uid);
 
-        _studioRadio.RefreshReceiver(uid);
+        _studioRadio.RefreshReceiver(uid); // Forge-Change
     }
     #endregion
 
@@ -258,7 +258,7 @@ public sealed class RadioDeviceSystem : EntitySystem
 
     private void OnListen(EntityUid uid, RadioMicrophoneComponent component, ListenEvent args)
     {
-        if (HasComp<RadioSpeakerComponent>(args.Source) || HasComp<StudioTapeDeckComponent>(args.Source))
+        if (HasComp<RadioSpeakerComponent>(args.Source) || HasComp<StudioTapeDeckComponent>(args.Source)) // Forge-Change
             return; // no feedback loops please.
 
         if (_recentlySent.Add((args.Message, args.Source)))
@@ -281,8 +281,7 @@ public sealed class RadioDeviceSystem : EntitySystem
         object originalName = HasComp<StudioTapeDeckComponent>(args.MessageSource)
             ? nameEv.VoiceName
             : nameEv.Sender;
-        var name = Loc.GetString("speech-name-relay", ("speaker", args.Channel.LocalizedName),
-            ("originalName", originalName));
+        var name = Loc.GetString("speech-name-relay", ("speaker", args.Channel.LocalizedName), ("originalName", originalName));
 
         // Borgs relay radio speech with their own synthetic voice. Do not overwrite it
         // with the sender's voice, as that would also change their subsequent speech.

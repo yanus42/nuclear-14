@@ -54,6 +54,7 @@
     broadcastChannel: PBS
     toggleOnInteract: true
     frequency: 1667
+  # Forge-Change-Start
   - type: DeviceLinkSink
     ports:
     - StudioRadioInput
@@ -62,6 +63,7 @@
     interfaces:
       enum.StudioRadioUiKey.Key:
         type: StudioRadioBoundUserInterface
+  # Forge-Change-End
   - type: Clickable
   - type: InteractionOutline
   - type: WiresVisuals
@@ -108,12 +110,14 @@
     enabled: true
     toggleOnInteract: true
     IsSpeaker: true
+  # Forge-Change-Start
   - type: StudioRadioReceiver
   - type: StudioRadioTuning
   - type: UserInterface
     interfaces:
       enum.StudioRadioUiKey.Key:
         type: StudioRadioBoundUserInterface
+  # Forge-Change-End
   - type: Tag
     tags:
     - Radio
@@ -141,6 +145,7 @@
     broadcastChannel: PBS
     toggleOnInteract: true
     frequency: 1667
+  # Forge-Change-Start
   - type: DeviceLinkSink
     ports:
     - StudioRadioInput
@@ -149,6 +154,7 @@
     interfaces:
       enum.StudioRadioUiKey.Key:
         type: StudioRadioBoundUserInterface
+  # Forge-Change-End
   - type: ActiveRadio
     channels:
     - PBS

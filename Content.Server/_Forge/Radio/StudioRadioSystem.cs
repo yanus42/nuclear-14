@@ -43,12 +43,14 @@ public sealed class StudioRadioSystem : EntitySystem
         if (!TryComp<DeviceLinkSourceComponent>(source, out var links))
             return false;
 
+        var map = Transform(source).MapID;
+        var powered = false;
         foreach (var (sink, ports) in links.LinkedPorts)
         {
             if (!ports.Contains((StudioOutput, StudioInput)) ||
                 TerminatingOrDeleted(sink) ||
                 !TryComp<RadioMicrophoneComponent>(sink, out var microphone) ||
-                Transform(source).MapID != Transform(sink).MapID)
+                map != Transform(sink).MapID)
             {
                 continue;
             }
@@ -58,10 +60,10 @@ public sealed class StudioRadioSystem : EntitySystem
 
             transmitter = sink;
             tuning = new StudioRadioFrequency(microphone.BroadcastChannel, microphone.Frequency);
+            powered = !microphone.PowerRequired || this.IsPowered(sink, EntityManager);
         }
 
-        return transmitter.Valid &&
-               (!Comp<RadioMicrophoneComponent>(transmitter).PowerRequired || this.IsPowered(transmitter, EntityManager));
+        return transmitter.Valid && powered;
     }
 
     public bool IsOccupied(StudioRadioFrequency tuning) => _broadcasts.ContainsKey(tuning);

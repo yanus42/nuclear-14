@@ -28,7 +28,7 @@ public sealed partial class JukeboxMenu : FancyWindow
     /// </summary>
     public event Action<bool>? OnPlayPressed;
     public event Action? OnStopPressed;
-    public event Action? OnBroadcastPressed;
+    public event Action? OnBroadcastPressed; // Forge-Change
     public event Action<ProtoId<JukeboxPrototype>>? OnSongSelected;
     public event Action<float>? SetTime;
 
@@ -61,7 +61,7 @@ public sealed partial class JukeboxMenu : FancyWindow
         {
             OnStopPressed?.Invoke();
         };
-        BroadcastButton.OnPressed += _ => OnBroadcastPressed?.Invoke();
+        BroadcastButton.OnPressed += _ => OnBroadcastPressed?.Invoke(); // Forge-Change
         PlaybackSlider.OnReleased += PlaybackSliderKeyUp;
 
         SetPlayPauseButton(_audioSystem.IsPlaying(_audio), force: true);
@@ -77,12 +77,12 @@ public sealed partial class JukeboxMenu : FancyWindow
         _audio = audio;
     }
 
+    // Forge-Change-Start
     public void SetBroadcasting(bool broadcasting)
     {
-        BroadcastButton.Text = Loc.GetString(broadcasting
-            ? "jukebox-menu-broadcast-stop"
-            : "jukebox-menu-broadcast-start");
+        BroadcastButton.Text = Loc.GetString(broadcasting ? "jukebox-menu-broadcast-stop" : "jukebox-menu-broadcast-start");
     }
+    // Forge-Change-End
 
     private void PlaybackSliderKeyUp(Slider args)
     {

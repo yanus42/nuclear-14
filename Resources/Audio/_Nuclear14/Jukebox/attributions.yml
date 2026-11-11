@@ -1,38 +1,38 @@
-- files: ["LonesomeValley.ogg", "LonesomeValley.radio-mono.ogg"]
+- files: ["LonesomeValley.ogg", "LonesomeValley.radio-mono.ogg"] # Forge-Change
   license: "Custom"
   copyright: "Traditional song performed by David Miller (The Blind Soldier). The composition and this historical recording are identified as public domain on the source page. Re-encoded to OGG."
   source: "https://commons.wikimedia.org/wiki/File:LonesomeValley.ogg"
 
-- files: ["StLouisBlues.ogg", "StLouisBlues.radio-mono.ogg"]
+- files: ["StLouisBlues.ogg", "StLouisBlues.radio-mono.ogg"] # Forge-Change
   license: "Custom"
   copyright: "St. Louis Blues by W. C. Handy, performed by the Original Dixieland Jazz Band with Al Bernard (1921). The composition and recording are public domain. Re-encoded to OGG."
   source: "https://commons.wikimedia.org/wiki/File:OriginalDixielandJazzBandwithAlBernard_StLouisBlues.ogg"
 
-- files: ["WhiteHouseBlues.ogg", "WhiteHouseBlues.radio-mono.ogg"]
+- files: ["WhiteHouseBlues.ogg", "WhiteHouseBlues.radio-mono.ogg"] # Forge-Change
   license: "Custom"
   copyright: "Traditional song performed by Charlie Poole and the North Carolina Ramblers (recorded in 1926). The composition and this historical recording are identified as public domain on the source page. Re-encoded to OGG."
   source: "https://commons.wikimedia.org/wiki/File:WhiteHouseBlues.ogg"
 
-- files: ["shenandoah.ogg", "shenandoah.radio-mono.ogg"]
+- files: ["shenandoah.ogg", "shenandoah.radio-mono.ogg"] # Forge-Change
   license: "Custom"
   copyright: "Traditional song performed by the Singing Sergeants of the United States Air Force Band. The composition, arrangement, performance, and recording are identified as public domain on the source page. Re-encoded to OGG."
   source: "https://commons.wikimedia.org/wiki/File:Shenandoah.ogg"
 
 - files:
   - "GrandmaPlaysTheNumbers.ogg"
-  - "GrandmaPlaysTheNumbers.radio-mono.ogg"
+  - "GrandmaPlaysTheNumbers.radio-mono.ogg" # Forge-Change
   - "IntoEachLifeSomeRainMustFall.ogg"
-  - "IntoEachLifeSomeRainMustFall.radio-mono.ogg"
+  - "IntoEachLifeSomeRainMustFall.radio-mono.ogg" # Forge-Change
   - "JustAFairWeatherFriend.ogg"
-  - "JustAFairWeatherFriend.radio-mono.ogg"
+  - "JustAFairWeatherFriend.radio-mono.ogg" # Forge-Change
   - "MisterFiveByFive.ogg"
-  - "MisterFiveByFive.radio-mono.ogg"
+  - "MisterFiveByFive.radio-mono.ogg" # Forge-Change
   - "OlManMose.ogg"
-  - "OlManMose.radio-mono.ogg"
+  - "OlManMose.radio-mono.ogg" # Forge-Change
   - "PraiseTheLordAndPassTheAmmunition.ogg"
-  - "PraiseTheLordAndPassTheAmmunition.radio-mono.ogg"
+  - "PraiseTheLordAndPassTheAmmunition.radio-mono.ogg" # Forge-Change
   - "StraightenUpAndFlyRight.ogg"
-  - "StraightenUpAndFlyRight.radio-mono.ogg"
+  - "StraightenUpAndFlyRight.radio-mono.ogg" # Forge-Change
   license: "Custom"
   copyright: "Fallout OST tracks © Bethesda Softworks / ZeniMax Media Inc. All rights reserved. Used without official license, for non-commercial fan purposes only. Will be removed upon request from the rights holder."
   source: "https://fallout.bethesda.net/"

@@ -1,8 +1,8 @@
-using Content.Server._Forge.Radio;
+using Content.Server._Forge.Radio; // Forge-Change
 using Content.Server.Power.Components;
 using Content.Server.Power.EntitySystems;
 using Content.Shared.Audio.Jukebox;
-using Content.Shared.Popups;
+using Content.Shared.Popups; // Forge-Change
 using Content.Shared.Power;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
@@ -19,8 +19,8 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 {
     [Dependency] private readonly IPrototypeManager _protoManager = default!;
     [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly StudioRadioSystem _studioRadio = default!;
+    [Dependency] private readonly SharedPopupSystem _popup = default!; // Forge-Change
+    [Dependency] private readonly StudioRadioSystem _studioRadio = default!; // Forge-Change
 
     public override void Initialize()
     {
@@ -29,8 +29,8 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         SubscribeLocalEvent<JukeboxComponent, JukeboxPlayingMessage>(OnJukeboxPlay);
         SubscribeLocalEvent<JukeboxComponent, JukeboxPauseMessage>(OnJukeboxPause);
         SubscribeLocalEvent<JukeboxComponent, JukeboxStopMessage>(OnJukeboxStop);
-        SubscribeLocalEvent<JukeboxComponent, JukeboxBroadcastMessage>(OnJukeboxBroadcast);
-        SubscribeLocalEvent<JukeboxComponent, StudioMusicEndedEvent>(OnBroadcastEnded);
+        SubscribeLocalEvent<JukeboxComponent, JukeboxBroadcastMessage>(OnJukeboxBroadcast); // Forge-Change
+        SubscribeLocalEvent<JukeboxComponent, StudioMusicEndedEvent>(OnBroadcastEnded); // Forge-Change
         SubscribeLocalEvent<JukeboxComponent, JukeboxSetTimeMessage>(OnJukeboxSetTime);
         SubscribeLocalEvent<JukeboxComponent, ComponentInit>(OnComponentInit);
         SubscribeLocalEvent<JukeboxComponent, ComponentShutdown>(OnComponentShutdown);
@@ -46,6 +46,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         }
     }
 
+    // Forge-Change-Start
     private void OnJukeboxPlay(EntityUid uid, JukeboxComponent component, ref JukeboxPlayingMessage args)
     {
         Play(uid, component);
@@ -72,6 +73,8 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         }
     }
 
+    // Forge-Change-End
+
     private void OnJukeboxPause(Entity<JukeboxComponent> ent, ref JukeboxPauseMessage args)
     {
         Audio.SetState(ent.Comp.AudioStream, AudioState.Paused);
@@ -79,7 +82,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void OnJukeboxSetTime(EntityUid uid, JukeboxComponent component, JukeboxSetTimeMessage args)
     {
-        if (float.IsFinite(args.SongTime) && TryComp(args.Actor, out ActorComponent? actorComp))
+        if (float.IsFinite(args.SongTime) && TryComp(args.Actor, out ActorComponent? actorComp)) // Forge-Change
         {
             var offset = actorComp.PlayerSession.Channel.Ping * 1.5f / 1000f;
             Audio.SetPlaybackPosition(component.AudioStream, args.SongTime + offset);
@@ -103,13 +106,16 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void Stop(Entity<JukeboxComponent> entity)
     {
+        // Forge-Change-Start
         if (entity.Comp.Broadcasting)
             _studioRadio.StopMusic(entity);
+        // Forge-Change-End
 
         Audio.SetState(entity.Comp.AudioStream, AudioState.Stopped);
         Dirty(entity);
     }
 
+    // Forge-Change-Start
     private void OnJukeboxBroadcast(Entity<JukeboxComponent> entity, ref JukeboxBroadcastMessage args)
     {
         if (entity.Comp.Broadcasting)
@@ -153,13 +159,16 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         jukebox.Broadcasting = false;
         Dirty(uid, jukebox);
     }
+    // Forge-Change-End
 
     private void OnJukeboxSelected(EntityUid uid, JukeboxComponent component, JukeboxSelectedMessage args)
     {
         if (!Audio.IsPlaying(component.AudioStream))
         {
+            // Forge-Change-Start
             if (component.Broadcasting)
                 _studioRadio.StopMusic(uid);
+            // Forge-Change-End
 
             component.SelectedSongId = args.SongId;
             DirectSetVisualState(uid, JukeboxVisualState.Select);
@@ -193,8 +202,10 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void OnComponentShutdown(EntityUid uid, JukeboxComponent component, ComponentShutdown args)
     {
+        // Forge-Change-Start
         if (component.Broadcasting)
             _studioRadio.StopMusic(uid);
+        // Forge-Change-End
 
         component.AudioStream = Audio.Stop(component.AudioStream);
     }

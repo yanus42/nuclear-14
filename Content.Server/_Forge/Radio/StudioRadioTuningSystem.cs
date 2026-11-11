@@ -79,8 +79,7 @@ public sealed class StudioRadioTuningSystem : EntitySystem
     {
         if (TryComp<RadioMicrophoneComponent>(uid, out var microphone))
         {
-            _ui.SetUiState(uid, StudioRadioUiKey.Key,
-                new StudioRadioUiState(microphone.BroadcastChannel, !HasComp<RadioSpeakerComponent>(uid)));
+            _ui.SetUiState(uid, StudioRadioUiKey.Key, new StudioRadioUiState(microphone.BroadcastChannel, !HasComp<RadioSpeakerComponent>(uid)));
         }
     }
 }
