@@ -1,8 +1,25 @@
 <ui:FancyWindow xmlns="https://spacestation14.io" xmlns:ui="clr-namespace:Content.Client.UserInterface.Controls"
-                SetSize="400 500" Title="{Loc 'jukebox-menu-title'}">
+                SetSize="680 540" Title="{Loc 'jukebox-menu-title'}">
     <BoxContainer Margin="4 0" Orientation="Vertical">
-        <ItemList Name="MusicList" SelectMode="Button" Margin="3 3 3 3"
-        HorizontalExpand="True" VerticalExpand="True" SizeFlagsStretchRatio="8"/>
+        <!-- Forge-Change-Start -->
+        <BoxContainer Orientation="Horizontal" VerticalExpand="True" SeparationOverride="8" Margin="3">
+            <BoxContainer Orientation="Vertical" HorizontalExpand="True">
+                <Label Text="{Loc 'jukebox-catalog'}" />
+                <LineEdit Name="Search" PlaceHolder="{Loc 'jukebox-search'}" />
+                <ItemList Name="MusicList" SelectMode="Button" HorizontalExpand="True" VerticalExpand="True" />
+                <Button Name="AddQueueButton" Text="{Loc 'jukebox-enqueue'}" Disabled="True" />
+            </BoxContainer>
+            <BoxContainer Orientation="Vertical" HorizontalExpand="True">
+                <Label Text="{Loc 'jukebox-queue'}" />
+                <ItemList Name="QueueList" SelectMode="Single" HorizontalExpand="True" VerticalExpand="True" />
+                <BoxContainer Orientation="Horizontal">
+                    <Button Name="QueueUpButton" Text="↑" HorizontalExpand="True" />
+                    <Button Name="QueueDownButton" Text="↓" HorizontalExpand="True" />
+                    <Button Name="RemoveQueueButton" Text="{Loc 'jukebox-remove'}" HorizontalExpand="True" />
+                </BoxContainer>
+            </BoxContainer>
+        </BoxContainer>
+        <!-- Forge-Change-End -->
         <BoxContainer Orientation="Vertical">
             <Label Name="SongSelected" Text="{Loc 'jukebox-menu-selectedsong'}" />
             <Label Name="SongName" Text="---" />
@@ -12,10 +29,16 @@
         VerticalExpand="False" SizeFlagsStretchRatio="1">
             <Button Name="PlayButton" Text="{Loc 'jukebox-menu-buttonplay'}" />
             <Button Name="StopButton" Text="{Loc 'jukebox-menu-buttonstop'}" />
+            <Button Name="NextButton" Text="{Loc 'jukebox-next'}" /> <!-- Forge-Change -->
             <Label Name="DurationLabel" Text="00:00 / 00:00" HorizontalAlignment="Right" HorizontalExpand="True"/>
         </BoxContainer>
         <!-- Forge-Change-Start -->
         <Button Name="BroadcastButton" Margin="0 4" HorizontalExpand="True" />
+        <BoxContainer Orientation="Horizontal" Margin="0 4 0 0">
+            <Label Text="{Loc 'jukebox-volume'}" HorizontalExpand="True" />
+            <Label Name="VolumeLabel" Text="100%" Align="Right" />
+        </BoxContainer>
+        <Slider Name="VolumeSlider" MinValue="0" MaxValue="100" Value="100" Rounded="True" HorizontalExpand="True" />
         <!-- Forge-Change-End -->
     </BoxContainer>
 </ui:FancyWindow>

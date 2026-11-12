@@ -42,6 +42,12 @@ public sealed class JukeboxBoundUserInterface : BoundUserInterface
         };
 
         _menu.OnBroadcastPressed += () => SendMessage(new JukeboxBroadcastMessage()); // Forge-Change
+        // Forge-Change-Start
+        _menu.OnEnqueuePressed += song => SendMessage(new JukeboxEnqueueMessage(song));
+        _menu.OnQueueEditPressed += (index, direction, revision) => SendMessage(new JukeboxEditQueueMessage(index, direction, revision));
+        _menu.OnNextPressed += () => SendMessage(new JukeboxNextMessage());
+        _menu.OnVolumeChanged += volume => SendMessage(new JukeboxSetVolumeMessage(volume));
+        // Forge-Change-End
         _menu.OnSongSelected += SelectSong;
 
         _menu.SetTime += SetTime;
@@ -59,6 +65,8 @@ public sealed class JukeboxBoundUserInterface : BoundUserInterface
 
         _menu.SetAudioStream(jukebox.AudioStream);
         _menu.SetBroadcasting(jukebox.Broadcasting); // Forge-Change
+        _menu.SetQueue(jukebox, _protoManager); // Forge-Change
+        _menu.SetVolume(jukebox.VolumePercent); // Forge-Change
 
         if (_protoManager.TryIndex(jukebox.SelectedSongId, out var songProto))
         {

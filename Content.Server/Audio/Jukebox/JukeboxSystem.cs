@@ -15,7 +15,7 @@ using JukeboxComponent = Content.Shared.Audio.Jukebox.JukeboxComponent;
 namespace Content.Server.Audio.Jukebox;
 
 
-public sealed class JukeboxSystem : SharedJukeboxSystem
+public sealed partial class JukeboxSystem : SharedJukeboxSystem // Forge-Change
 {
     [Dependency] private readonly IPrototypeManager _protoManager = default!;
     [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
@@ -25,6 +25,13 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
     public override void Initialize()
     {
         base.Initialize();
+        // Forge-Change-Start
+        UpdatesBefore.Add(typeof(StudioRadioSystem));
+        SubscribeLocalEvent<JukeboxComponent, JukeboxEnqueueMessage>(OnEnqueue);
+        SubscribeLocalEvent<JukeboxComponent, JukeboxEditQueueMessage>(OnEditQueue);
+        SubscribeLocalEvent<JukeboxComponent, JukeboxNextMessage>(OnNext);
+        SubscribeLocalEvent<JukeboxComponent, JukeboxSetVolumeMessage>(OnJukeboxSetVolume);
+        // Forge-Change-End
         SubscribeLocalEvent<JukeboxComponent, JukeboxSelectedMessage>(OnJukeboxSelected);
         SubscribeLocalEvent<JukeboxComponent, JukeboxPlayingMessage>(OnJukeboxPlay);
         SubscribeLocalEvent<JukeboxComponent, JukeboxPauseMessage>(OnJukeboxPause);
@@ -40,6 +47,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void OnComponentInit(EntityUid uid, JukeboxComponent component, ComponentInit args)
     {
+        component.VolumePercent = Math.Min(component.VolumePercent, JukeboxComponent.MaxVolumePercent); // Forge-Change
         if (HasComp<ApcPowerReceiverComponent>(uid))
         {
             TryUpdateVisualState(uid, component);
@@ -54,22 +62,19 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void Play(EntityUid uid, JukeboxComponent component)
     {
+        if (!this.IsPowered(uid, EntityManager))
+            return;
+
         if (Exists(component.AudioStream))
         {
             Audio.SetState(component.AudioStream, AudioState.Playing);
         }
         else
         {
-            component.AudioStream = Audio.Stop(component.AudioStream);
-
-            if (string.IsNullOrEmpty(component.SelectedSongId) ||
-                !_protoManager.TryIndex(component.SelectedSongId, out var jukeboxProto))
-            {
-                return;
-            }
-
-            component.AudioStream = Audio.PlayPvs(jukeboxProto.PositionalPath, uid, AudioParams.Default.WithMaxDistance(10f))?.Entity;
-            Dirty(uid, component);
+            if (component.Queue.Count > 0)
+                PlayNext((uid, component));
+            else if (component.SelectedSongId is { } song)
+                StartTrack((uid, component), song);
         }
     }
 
@@ -95,6 +100,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
         if (!this.IsPowered(entity.Owner, EntityManager))
         {
+            entity.Comp.PendingVolumePercent = null; // Forge-Change
             Stop(entity);
         }
     }
@@ -111,7 +117,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
             _studioRadio.StopMusic(entity);
         // Forge-Change-End
 
-        Audio.SetState(entity.Comp.AudioStream, AudioState.Stopped);
+        entity.Comp.AudioStream = Audio.Stop(entity.Comp.AudioStream); // Forge-Change
         Dirty(entity);
     }
 
@@ -133,7 +139,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
             return;
         }
 
-        if (!_protoManager.TryIndex(entity.Comp.SelectedSongId, out var song))
+        if (entity.Comp.SelectedSongId == null && entity.Comp.Queue.Count == 0)
         {
             _popup.PopupEntity(Loc.GetString("jukebox-broadcast-select-song"), entity, args.Actor);
             return;
@@ -147,6 +153,9 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
         Play(entity, entity.Comp);
         if (entity.Comp.AudioStream is not { } audio)
+            return;
+
+        if (!_protoManager.TryIndex(entity.Comp.SelectedSongId, out var song))
             return;
 
         entity.Comp.Broadcasting = true;
@@ -163,7 +172,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
 
     private void OnJukeboxSelected(EntityUid uid, JukeboxComponent component, JukeboxSelectedMessage args)
     {
-        if (!Audio.IsPlaying(component.AudioStream))
+        if (!TryComp<AudioComponent>(component.AudioStream, out var audio) || audio.State == AudioState.Stopped) // Forge-Change
         {
             // Forge-Change-Start
             if (component.Broadcasting)
@@ -186,6 +195,7 @@ public sealed class JukeboxSystem : SharedJukeboxSystem
         var query = EntityQueryEnumerator<JukeboxComponent>();
         while (query.MoveNext(out var uid, out var comp))
         {
+            UpdatePlayback(uid, comp); // Forge-Change
             if (comp.Selecting)
             {
                 comp.SelectAccumulator += frameTime;

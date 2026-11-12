@@ -79,6 +79,19 @@ public sealed class StudioRadioSystem : EntitySystem
         StopMusicFrom(source, transmitter: false);
     }
 
+    public void ReplaceMusic(EntityUid source, EntityUid audio, SoundSpecifier song)
+    {
+        foreach (var broadcast in _broadcasts.Values)
+        {
+            if (broadcast.Source != source)
+                continue;
+
+            _broadcasts[broadcast.Tuning] = broadcast with { Audio = audio, Song = song };
+            RefreshReceivers();
+            return;
+        }
+    }
+
     public bool StopTransmitterMusic(EntityUid microphone) => StopMusicFrom(microphone, transmitter: true);
 
     private bool StopMusicFrom(EntityUid uid, bool transmitter)

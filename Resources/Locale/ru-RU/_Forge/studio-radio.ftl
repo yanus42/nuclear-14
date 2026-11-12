@@ -1,4 +1,11 @@
 studio-radio-output-name = Выход студии
+jukebox-catalog = Каталог песен
+jukebox-search = Найти песню
+jukebox-queue = Очередь
+jukebox-enqueue = Добавить в очередь
+jukebox-remove = Удалить
+jukebox-next = Следующий трек
+jukebox-volume = Громкость автомата
 studio-radio-output-desc = Подключите ко входу студийного микрофона, чтобы вещать на его радиоканале.
 studio-radio-input-name = Вход студии
 studio-radio-input-desc = Принимает сигнал музыкального автомата или кассетной деки.
