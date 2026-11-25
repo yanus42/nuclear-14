@@ -453,7 +453,12 @@ namespace Content.Server.NPC.Pathfinding
                 (layer, mask) = _physics.GetHardCollision(entity, fixtures);
             }
 
-            return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken);
+            // Forge-Change: snapshot rejected barriers before entering the parallel search queue.
+            return new AStarPathRequest(start, end, flags, range, layer, mask, cancelToken)
+            {
+                BlockedBarriers = GetBlockedForgeBarriers(entity),
+                ClimbCostPerSecond = GetForgeClimbCostPerSecond(entity, flags),
+            };
         }
 
         public PathFlags GetFlags(EntityUid uid)
@@ -490,7 +495,7 @@ namespace Content.Server.NPC.Pathfinding
                 flags |= PathFlags.Interact;
             }
 
-            return flags;
+            return flags | GetForgeBarrierFlags(blackboard); // Forge-Change
         }
 
         private async Task<PathResultEvent> GetPath(

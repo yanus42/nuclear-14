@@ -5,6 +5,9 @@ namespace Content.Shared.CCVar;
 
 public sealed partial class CCVars
 {
+    /// <summary>Enable opt-in humanoid combat movement without changing normal NPC pursuit.</summary>
+    public static readonly CVarDef<bool> NPCCombatTacticsEnabled = CVarDef.Create("npc.combat_tactics", true);
+
     /// <summary>
     /// Log pathfinding work and queue sizes every ten seconds for server profiling.
     /// </summary>
@@ -34,5 +37,6 @@ public sealed partial class CCVars
     /// Maximum extra route length along grid axes, in tiles, when a proximity NPC chases a player.
     /// A negative value disables the detour limit.
     /// </summary>
-    public static readonly CVarDef<float> NPCMaxPlayerChaseDetour = CVarDef.Create("npc.max_player_chase_detour", 12f);
+    // Allow short U-shaped barricades while still rejecting long trips around map walls.
+    public static readonly CVarDef<float> NPCMaxPlayerChaseDetour = CVarDef.Create("npc.max_player_chase_detour", 20f);
 }

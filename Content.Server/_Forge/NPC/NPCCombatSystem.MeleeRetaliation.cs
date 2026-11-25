@@ -1,4 +1,4 @@
-// Forge-Change: let melee NPCs keep chasing a remembered player beyond the usual 14-tile loss radius.
+// Forge-Change: retain remembered combat targets beyond the usual 14-tile melee loss radius.
 namespace Content.Server.NPC.Systems;
 
 public sealed partial class NPCCombatSystem
@@ -7,6 +7,7 @@ public sealed partial class NPCCombatSystem
 
     private bool IsRememberedMeleeAttacker(EntityUid uid, EntityUid target)
     {
-        return _retaliation.IsRememberedPlayerAttacker(uid, target);
+        return _retaliation.IsRememberedPlayerAttacker(uid, target) ||
+               _combatTactics.TryGetPursuitTarget(uid, out var tracked, out _) && tracked == target;
     }
 }

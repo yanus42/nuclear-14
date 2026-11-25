@@ -39,6 +39,9 @@ public sealed partial class NPCSteeringSystem
 
     private SteeringObstacleStatus TryHandleFlags(EntityUid uid, NPCSteeringComponent component, PathPoly poly)
     {
+        // Forge-Change: bounded door/storage handling for opted-in NPCs.
+        if (HandleForgeBarrier(uid, component, poly) is {} barrierStatus)
+            return barrierStatus;
         DebugTools.Assert(!poly.Data.IsFreeSpace);
         // TODO: Store PathFlags on the steering comp
         // and be able to re-check it.
@@ -225,6 +228,7 @@ public sealed partial class NPCSteeringSystem
     {
         Completed,
         Failed,
-        Continuing
+        Continuing,
+        Repath, // Forge-Change: try another route before declaring the target unreachable.
     }
 }

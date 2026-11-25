@@ -26,6 +26,7 @@ public sealed class ProximityNPCSystem : EntitySystem
     [Dependency] private readonly EntityLookupSystem _lookup = default!;
     [Dependency] private readonly NPCSystem _npc = default!;
     [Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Dependency] private readonly NPCEncounterReturnSystem _encounterReturn = default!;
 
     private readonly List<EntityUid> _pending = new();
     private readonly HashSet<EntityUid> _proximitySleeping = new();
@@ -188,11 +189,18 @@ public sealed class ProximityNPCSystem : EntitySystem
                 _retaliatingUntil.Remove(uid);
             }
 
+            TryComp<NPCEncounterReturnComponent>(uid, out var encounter);
+            if (encounter?.ReturnSteering != null)
+                continue;
+
             var range = awake ? proximity.SleepRange : proximity.WakeRange;
             var mapPos = _transform.GetMapCoordinates(uid, xform);
             _players.Clear();
             _lookup.GetEntitiesInRange(mapPos, range, _players);
             var playerNearby = _players.Count > 0;
+
+            if (awake && encounter != null && _encounterReturn.DelaySleep((uid, encounter), playerNearby))
+                continue;
 
             if (awake && !playerNearby)
                 Sleep(uid);

@@ -21,6 +21,10 @@ public abstract class PathRequest
 
     public bool Started = false;
 
+    // Forge-Change: immutable snapshot for parallel path searches; no live retry-state writes in A*.
+    public HashSet<EntityUid>? BlockedBarriers;
+    public float ClimbCostPerSecond; // Forge-Change: convert the climb delay into equivalent walking distance.
+
     #region Pathfinding state
 
     public readonly Stopwatch Stopwatch = new();

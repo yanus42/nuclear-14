@@ -7,6 +7,7 @@ using Content.Server.NPC.Components;
 using Content.Server.NPC.Events;
 using Content.Server.NPC.Pathfinding;
 using Content.Shared.CCVar;
+using Content.Shared.Climbing.Components; // Forge-Change
 using Content.Shared.Climbing.Systems;
 using Content.Shared.CombatMode;
 using Content.Shared.Interaction;
@@ -169,6 +170,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     /// </summary>
     public NPCSteeringComponent Register(EntityUid uid, EntityCoordinates coordinates, NPCSteeringComponent? component = null)
     {
+        _encounterReturn.RememberStart(uid, coordinates.EntityId); // Forge-Change
         if (Resolve(uid, ref component, false))
         {
             if (component.Coordinates.Equals(coordinates))
@@ -336,8 +338,11 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         // Can't move at all, just noop input.
         if (!mover.CanMove)
         {
-            SetDirection(uid, mover, steering, Vector2.Zero);
-            steering.Status = SteeringStatus.NoPath;
+            // Forge-Change: the climb controller blocks input while it moves the NPC onto the obstacle.
+            var vaulting = TryComp<ClimbingComponent>(uid, out var climb) && climb.NextTransition != null;
+            SetDirection(uid, mover, steering, Vector2.Zero, clear: !vaulting);
+            if (!vaulting)
+                steering.Status = SteeringStatus.NoPath;
             return;
         }
 
@@ -350,16 +355,25 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         _modifierQuery.TryGetComponent(uid, out var modifier);
         var moveSpeed = GetSprintSpeed(uid, modifier);
         var body = _physicsQuery.GetComponent(uid);
+        var combatDirection = GetForgeCombatDirection(uid, mover, steering, xform, moveSpeed); // Forge-Change
+        if (combatDirection == Vector2.Zero) // Forge-Change: the tactical stop has already cleared movement.
+            return;
         var dangerPoints = steering.DangerPoints;
         dangerPoints.Clear();
         Span<float> interest = stackalloc float[InterestDirections];
         Span<float> danger = stackalloc float[InterestDirections];
 
         // TODO: This should be fly
-        steering.CanSeek = true;
-
-        var ev = new NPCSteeringEvent(steering, xform, worldPos, offsetRot);
-        RaiseLocalEvent(uid, ref ev);
+        // Forge-Change-Start: never combine tactical movement with a second Juke/Seek intent.
+        steering.CanSeek = !combatDirection.HasValue;
+        if (combatDirection is {} direction)
+            ApplySeek(interest, offsetRot.RotateVec(direction), 1f);
+        else
+        {
+            var ev = new NPCSteeringEvent(steering, xform, worldPos, offsetRot);
+            RaiseLocalEvent(uid, ref ev);
+        }
+        // Forge-Change-End
         // If seek has arrived at the target node for example then immediately re-steer.
         var forceSteer = true;
 
@@ -436,7 +450,10 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
     {
         // If we already have a pathfinding request then don't grab another.
         // If we're in range then just beeline them; this can avoid stutter stepping and is an easy way to look nicer.
-        if (steering.Pathfind || targetDistance < steering.RepathRange)
+        // Forge-Change: don't skip a short route when a door, fence or table separates the NPC and its target.
+        var close = targetDistance < steering.RepathRange;
+        if (steering.Pathfind || close && (steering.Flags & PathFlags.RequireFloor) == 0 &&
+            !IsForgeChaseObstructed(uid, steering, targetDistance))
             return;
 
         // Short-circuit with no path.
@@ -444,7 +461,7 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
 
         // If this still causes issues future sloth adjust the collision mask.
         // Thanks past sloth I already realised.
-        if (targetPoly != null &&
+        if ((steering.Flags & PathFlags.RequireFloor) == 0 && targetPoly != null && // Forge-Change
             steering.Coordinates.Position.Equals(Vector2.Zero) &&
             TryComp<PhysicsComponent>(uid, out var physics) &&
             _interaction.InRangeUnobstructed(uid, steering.Coordinates.EntityId, range: 30f, (CollisionGroup)physics.CollisionMask))
@@ -462,13 +479,13 @@ public sealed partial class NPCSteeringSystem : SharedNPCSteeringSystem
         steering.PathfindToken = pathfindToken;
         // Forge-Change-End
 
-        var flags = _pathfindingSystem.GetFlags(uid);
+        var flags = _pathfindingSystem.GetFlags(uid) | (steering.Flags & PathFlags.RequireFloor); // Forge-Change
 
         var result = await _pathfindingSystem.GetPathSafe(
             uid,
             xform.Coordinates,
             pathfindTarget, // Forge-Change
-            steering.Range,
+            close ? 0f : steering.Range, // Forge-Change: don't stop the search on the wrong side of a nearby obstacle.
             pathfindToken.Token, // Forge-Change
             flags);
 

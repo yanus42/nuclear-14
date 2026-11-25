@@ -7,6 +7,10 @@
   id: N14MobBloatfly
   description: A mutated floating bug with an infectious bite and parasitic stinger capable of launching larvae.
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Skirmish
+    minimumRange: 4
+    maximumRange: 7
   - type: HTN
     rootTask:
       task: N14RangedHostileCompound

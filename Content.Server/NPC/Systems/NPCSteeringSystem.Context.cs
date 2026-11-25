@@ -43,7 +43,7 @@ public sealed partial class NPCSteeringSystem
         NPCSteeringComponent steering,
         PathPoly node)
     {
-        if (node.Data.IsFreeSpace)
+        if (node.Data.IsFreeSpace && node.Barrier == null) // Forge-Change: an indestructible closet is still a barrier.
         {
             return true;
         }
@@ -58,7 +58,9 @@ public sealed partial class NPCSteeringSystem
 
         // TODO: Ideally for "FreeSpace" we check all entities on the tile and build flags dynamically (pathfinder refactor in future).
         var ents = _entSetPool.Get();
-        _lookup.GetLocalEntitiesIntersecting(node.GraphUid, node.Box.Enlarged(-0.04f), ents, flags: LookupFlags.Static);
+        // Forge-Change: movable storage barriers must not be mistaken for free space.
+        var lookupFlags = node.Barrier != null ? LookupFlags.Static | LookupFlags.Dynamic : LookupFlags.Static;
+        _lookup.GetLocalEntitiesIntersecting(node.GraphUid, node.Box.Enlarged(-0.04f), ents, flags: lookupFlags);
         var result = true;
 
         if (ents.Count > 0)
@@ -106,7 +108,8 @@ public sealed partial class NPCSteeringSystem
         if (!steering.ForceMove && steering.ArriveOnLineOfSight)
         {
             // TODO: use vision range
-            inLos = _interaction.InRangeUnobstructed(uid, steering.Coordinates, 10f);
+            inLos = _interaction.InRangeUnobstructed(uid, steering.Coordinates, 10f) &&
+                    _combatTactics.HasFiringLine(uid, destinationCoordinates.EntityId, ignoreMobs: true); // Forge-Change: navigate around fences, not temporary bodies in the firing line.
 
             if (inLos)
             {
@@ -127,16 +130,52 @@ public sealed partial class NPCSteeringSystem
         else
         {
             steering.LineOfSightTimer = 0f;
+            // Forge-Change: a forced approach to a blocked firing line still needs a route.
+            // Sliding along the obstacle can keep ordinary stuck detection from requesting one.
+            inLos = !steering.ArriveOnLineOfSight || _combatTactics.HasFiringLine(uid, destinationCoordinates.EntityId, ignoreMobs: true);
             steering.ForceMove = false;
         }
+
+        // Forge-Change-Start: handle a reachable barrier before tight graph cells can trap the body.
+        if (HandleUpcomingForgeBarrier(uid, steering) is {} barrierStatus)
+        {
+            ResetStuck(steering, ourCoordinates);
+            if (barrierStatus == SteeringObstacleStatus.Repath)
+            {
+                RepathForgeBarrier(uid, steering, xform);
+                return true;
+            }
+            if (barrierStatus == SteeringObstacleStatus.Failed)
+            {
+                steering.Status = SteeringStatus.NoPath;
+                return false;
+            }
+            if (barrierStatus == SteeringObstacleStatus.Continuing)
+            {
+                steering.LastSteerDirection = Vector2.Zero;
+                forceSteer = false;
+                return true;
+            }
+        }
+        // Forge-Change-End
 
         // We've arrived, nothing else matters.
         if (xform.Coordinates.TryDistance(EntityManager, destinationCoordinates, out var targetDistance) &&
             inLos &&
-            targetDistance <= steering.Range)
+            targetDistance <= steering.Range &&
+            !IsForgeChaseObstructed(uid, steering, targetDistance)) // Forge-Change: a nearby target can be behind an obstacle.
         {
             steering.Status = SteeringStatus.InRange;
             ResetStuck(steering, ourCoordinates);
+            return true;
+        }
+
+        // Forge-Change: start climbing from interaction range, before collision avoidance stalls the approach.
+        if (TryClimbUpcomingForgeObstacle(uid, steering, xform, body))
+        {
+            ResetStuck(steering, ourCoordinates);
+            steering.LastSteerDirection = Vector2.Zero;
+            forceSteer = false;
             return true;
         }
 
@@ -150,7 +189,11 @@ public sealed partial class NPCSteeringSystem
             if (steering.CurrentPath.TryPeek(out var poly) &&
                 (poly.Data.Flags & PathfindingBreadcrumbFlag.Invalid) != 0x0)
             {
-                steering.CurrentPath.Dequeue();
+                // Forge-Change: one door update can invalidate several consecutive nodes.
+                do
+                {
+                    steering.CurrentPath.Dequeue();
+                } while (steering.CurrentPath.TryPeek(out poly) && !poly.IsValid());
                 // Try to get the next node temporarily.
                 targetCoordinates = GetTargetCoordinates(steering);
                 needsPath = true;
@@ -189,7 +232,11 @@ public sealed partial class NPCSteeringSystem
         // TODO: Consider melee range or the likes.
         else
         {
-            arrived = direction.Length() <= SharedInteractionSystem.InteractionRange - 0.05f;
+            // Forge-Change: breaking needs weapon reach; there may be no path node while a request is pending.
+            var obstacleRange = steering.CurrentPath.TryPeek(out var obstacle)
+                ? ForgeObstacleRange(uid, steering, obstacle)
+                : SharedInteractionSystem.InteractionRange - 0.05f;
+            arrived = direction.Length() <= obstacleRange;
         }
 
         // Are we in range
@@ -217,6 +264,9 @@ public sealed partial class NPCSteeringSystem
                 // TODO: Need to handle re-pathing in case the target moves around.
                 switch (status)
                 {
+                    case SteeringObstacleStatus.Repath: // Forge-Change
+                        RepathForgeBarrier(uid, steering, xform);
+                        return true;
                     case SteeringObstacleStatus.Completed:
                         steering.DoAfterId = null;
                         break;
@@ -246,6 +296,13 @@ public sealed partial class NPCSteeringSystem
 
                 if (!targetCoordinates.IsValid(EntityManager))
                 {
+                    // Forge-Change: a rebuilt door chunk can invalidate the node we just advanced to.
+                    if (steering.CurrentPath.TryPeek(out var invalidNode) && !invalidNode.IsValid())
+                    {
+                        CheckPath(uid, steering, xform, true, targetDistance);
+                        return true;
+                    }
+
                     SetDirection(uid, mover, steering, Vector2.Zero);
                     steering.Status = SteeringStatus.NoPath;
                     return false;

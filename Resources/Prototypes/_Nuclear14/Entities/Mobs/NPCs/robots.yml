@@ -100,6 +100,7 @@
   name: robot
   description: Designed to serve humankind. Maybe it ended it.
   components:
+  - type: NPCBarrier # Forge-Change: bounded breaking of doors/storage during combat.
   - type: NpcFactionMember
     factions:
     - HostileRobot
@@ -143,6 +144,8 @@
   id: N14MobRobotHostileMelee
   categories: [ HideSpawnMenu ]
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Skirmish
   - type: MeleeWeapon
     hidden: true
     soundHit:
@@ -170,6 +173,8 @@
   id: N14MobRobotHostileRanged
   categories: [ HideSpawnMenu ]
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Skirmish
   - type: HTN
     rootTask:
       task: N14RangedHostileCompound
@@ -238,6 +243,8 @@
   name: Protectron
   description: A common protectron looking for a fight.
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Direct
   - type: MovementSpeedModifier
     baseWalkSpeed : 1.5
     baseSprintSpeed : 3
@@ -320,6 +327,10 @@
   name: Protectron
   description: A protectron police bot looking for a fight.
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Skirmish
+    minimumRange: 5
+    maximumRange: 8
   - type: Sprite
     sprite: _Nuclear14/Mobs/Robots/protectron-police.rsi
   # Forge-Change-Start
@@ -663,6 +674,8 @@
   description: A pre-war military sentry bot, wielding a crude laser rifle in one arm and a minigun in the other.
   suffix: hostile, dual
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Direct
   - type: MobThresholds
     thresholds:
       0: Alive

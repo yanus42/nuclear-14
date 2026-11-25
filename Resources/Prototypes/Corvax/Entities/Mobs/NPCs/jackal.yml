@@ -4,6 +4,8 @@
   parent: N14MobBaseHostile
   description: Это не собака, ЭТО НЕ СОБАКА!!!
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Skirmish
   - type: Sprite
     drawdepth: Mobs
     layers:

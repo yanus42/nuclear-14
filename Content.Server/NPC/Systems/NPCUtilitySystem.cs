@@ -98,6 +98,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem // Forge-Change: hel
         }
         // Forge-Change-End
 
+        var tracked = AddTrackedCombatTarget(blackboard, proto, ents, out var trackedDistance); // Forge-Change
         foreach (var query in weh.Query)
         {
             switch (query)
@@ -138,7 +139,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem // Forge-Change: hel
 
             foreach (var con in weh.Considerations)
             {
-                var conScore = GetScore(blackboard, ent, con);
+                var conScore = GetScore(blackboard, ent, con, ent == tracked ? trackedDistance : null); // Forge-Change
                 var curve = con.Curve;
                 var curveScore = GetScore(curve, conScore);
 
@@ -249,6 +250,7 @@ public sealed partial class NPCUtilitySystem : EntitySystem // Forge-Change: hel
             }
             case TargetAccessibleCon:
             {
+                if (_combatTactics.IsHiddenInStorage(owner, targetUid)) return 0f; // Forge-Change: only witnessed storage gets its own inspection plan.
                 if (_container.TryGetContainingContainer(targetUid, out var container))
                 {
                     if (TryComp<EntityStorageComponent>(container.Owner, out var storageComponent))
@@ -301,8 +303,8 @@ public sealed partial class NPCUtilitySystem : EntitySystem // Forge-Change: hel
                     return 0f;
                 }
 
-                // Forge-Change: a remembered attacker is not penalized for exceeding normal vision.
-                return retaliationDistance.HasValue ? 0f : Math.Clamp(distance / radius, 0f, 1f);
+                // Forge-Change: keep tracked targets eligible without treating them as point-blank.
+                return Math.Clamp(distance / radius, 0f, retaliationDistance.HasValue ? 0.95f : 1f);
             }
             case TargetAmmoCon:
             {

@@ -4,6 +4,9 @@
   parent: BaseCartridgePistol
   abstract: true
   components:
+  - type: NPCWeaponTactics # Forge-Change: firing band for integrated shotgun NPCs.
+    minimumRange: 2
+    maximumRange: 4
   - type: Tag
     tags:
     - Cartridge

@@ -4,6 +4,11 @@
   description: A pre-war military sentry bot running heavy combat protocols. It locks onto its target and launches a slow missile.
   suffix: hostile, boss
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Direct
+    minimumRange: 8
+    maximumRange: 10
+    minimumBodyRadius: 0.4
   - type: LagCompensation
   - type: Reactive
     groups:

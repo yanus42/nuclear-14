@@ -84,6 +84,9 @@
   name: Maypole
   description: A special looking ghoul towering over most everything.
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Direct
+    minimumBodyRadius: 0.7
   - type: Damageable
     damageContainer: Biological
     damageModifierSet: N14ToughAnimal

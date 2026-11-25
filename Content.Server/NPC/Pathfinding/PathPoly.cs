@@ -23,7 +23,14 @@ public sealed class PathPoly : IEquatable<PathPoly>
     [ViewVariables]
     public readonly HashSet<PathPoly> Neighbors;
 
-    public PathPoly(EntityUid graphUid, Vector2i chunkOrigin, byte tileIndex, Box2 vertices, PathfindingData data, HashSet<PathPoly> neighbors)
+    // Forge-Change: server-side identity of a single barrier, excluding mixed obstacles.
+    public readonly EntityUid? Barrier;
+    public readonly bool BarrierCanOpen;
+    public readonly EntityUid? ClimbObstacle;
+    public readonly float ClimbDelay;
+
+    public PathPoly(EntityUid graphUid, Vector2i chunkOrigin, byte tileIndex, Box2 vertices, PathfindingData data, HashSet<PathPoly> neighbors,
+        EntityUid? barrier = null, bool barrierCanOpen = false, EntityUid? climbObstacle = null, float climbDelay = 0f) // Forge-Change
     {
         GraphUid = graphUid;
         ChunkOrigin = chunkOrigin;
@@ -31,6 +38,10 @@ public sealed class PathPoly : IEquatable<PathPoly>
         Box = vertices;
         Data = data;
         Neighbors = neighbors;
+        Barrier = barrier; // Forge-Change
+        BarrierCanOpen = barrierCanOpen; // Forge-Change
+        ClimbObstacle = climbObstacle; // Forge-Change
+        ClimbDelay = climbDelay; // Forge-Change
     }
 
     public bool IsValid()
@@ -48,7 +59,8 @@ public sealed class PathPoly : IEquatable<PathPoly>
         return GraphUid.Equals(other.GraphUid) &&
                ChunkOrigin.Equals(other.ChunkOrigin) &&
                TileIndex == other.TileIndex &&
-               Data.IsEquivalent(other.Data) &&
+               Data.IsEquivalent(other.Data) && Barrier == other.Barrier && BarrierCanOpen == other.BarrierCanOpen && // Forge-Change
+               ClimbObstacle == other.ClimbObstacle && ClimbDelay.Equals(other.ClimbDelay) && // Forge-Change
                Box.Equals(other.Box);
     }
 
@@ -58,7 +70,8 @@ public sealed class PathPoly : IEquatable<PathPoly>
                GraphUid.Equals(other.GraphUid) &&
                ChunkOrigin.Equals(other.ChunkOrigin) &&
                TileIndex == other.TileIndex &&
-               Data.Equals(other.Data) &&
+               Data.Equals(other.Data) && Barrier == other.Barrier && BarrierCanOpen == other.BarrierCanOpen && // Forge-Change
+               ClimbObstacle == other.ClimbObstacle && ClimbDelay.Equals(other.ClimbDelay) && // Forge-Change
                Box.Equals(other.Box);
     }
 

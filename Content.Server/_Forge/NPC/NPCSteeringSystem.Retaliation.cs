@@ -7,6 +7,7 @@ public sealed partial class NPCSteeringSystem
 {
     private bool ForgetUnreachableAttacker(EntityUid uid, NPCSteeringComponent steering)
     {
+        _combatTactics.ForgetPursuitTarget(uid, steering.Coordinates.EntityId);
         return EntityManager.System<NPCRetaliationSystem>()
             .ForgetUnreachableAttacker(uid, steering.Coordinates.EntityId);
     }

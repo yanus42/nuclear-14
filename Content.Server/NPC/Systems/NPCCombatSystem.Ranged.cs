@@ -135,7 +135,8 @@ public sealed partial class NPCCombatSystem
             {
                 comp.LOSAccumulator += UnoccludedCooldown;
                 // For consistency with NPC steering.
-                comp.TargetInLOS = _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f);
+                comp.TargetInLOS = _interaction.InRangeUnobstructed(uid, comp.Target, distance + 0.1f) &&
+                                   _combatTactics.HasFiringLine(uid, comp.Target); // Forge-Change: fences can be visible but bullet-blocking.
             }
 
             if (!comp.TargetInLOS)

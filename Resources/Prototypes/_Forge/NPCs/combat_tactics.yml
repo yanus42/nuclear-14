@@ -1,0 +1,9 @@
+- type: htnCompound
+  id: ForgeHumanoidCombatCompound
+  branches:
+  - tasks:
+    - !type:HTNPrimitiveTask
+      operator: !type:NPCInspectStorageOperator
+  - tasks:
+    - !type:HTNCompoundTask
+      task: N14RangedHostileCompound

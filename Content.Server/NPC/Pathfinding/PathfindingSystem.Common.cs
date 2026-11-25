@@ -1,4 +1,5 @@
 using Content.Shared.Gravity;
+using Content.Shared.FixedPoint; // Forge-Change
 using Content.Shared.NPC;
 
 namespace Content.Server.NPC.Pathfinding;
@@ -45,7 +46,8 @@ public sealed partial class PathfindingSystem
 
         // TODO
         if ((end.Data.Flags & PathfindingBreadcrumbFlag.Space) != 0x0 &&
-            (!TryComp<GravityComponent>(end.GraphUid, out var gravity) || !gravity.Enabled))
+            ((request.Flags & PathFlags.RequireFloor) != 0 || // Forge-Change: keep returning NPCs on the grid.
+             !TryComp<GravityComponent>(end.GraphUid, out var gravity) || !gravity.Enabled))
         {
             return 0f;
         }
@@ -53,6 +55,20 @@ public sealed partial class PathfindingSystem
         if ((request.CollisionLayer & end.Data.CollisionMask) != 0x0 ||
             (request.CollisionMask & end.Data.CollisionLayer) != 0x0)
         {
+            // Forge-Change-Start: allow only identified barriers, respecting per-NPC retry cooldowns.
+            if (end.Barrier is {} barrier &&
+                (request.Flags & (PathFlags.OpenBarriers | PathFlags.BreakBarriers)) != 0)
+            {
+                if (request.BlockedBarriers?.Contains(barrier) == true)
+                    return 0f;
+                if ((request.Flags & PathFlags.OpenBarriers) != 0 && end.BarrierCanOpen)
+                    return 1.5f * OctileDistance(end, start);
+                if ((request.Flags & PathFlags.BreakBarriers) != 0 && end.Data.Damage > 0 &&
+                    end.Data.Damage < FixedPoint2.MaxValue.Float())
+                    return (11f + end.Data.Damage / 100f) * OctileDistance(end, start);
+                return 0f;
+            }
+            // Forge-Change-End
             var isDoor = (end.Data.Flags & PathfindingBreadcrumbFlag.Door) != 0x0;
             var isAccess = (end.Data.Flags & PathfindingBreadcrumbFlag.Access) != 0x0;
             var isClimb = (end.Data.Flags & PathfindingBreadcrumbFlag.Climb) != 0x0;
@@ -74,6 +90,13 @@ public sealed partial class PathfindingSystem
             }
             else if (isClimb && (request.Flags & PathFlags.Climbing) != 0x0)
             {
+                // Forge-Change: charge the wait once on entry, even when one obstacle spans several polygons.
+                if (request.ClimbCostPerSecond > 0f && (end.ClimbObstacle != null || end.ClimbDelay > 0f))
+                {
+                    var delay = end.ClimbObstacle is {} obstacle && start.ClimbObstacle == obstacle ? 0f : end.ClimbDelay;
+                    return OctileDistance(end, start) + delay * request.ClimbCostPerSecond;
+                }
+
                 modifier += 0.5f;
             }
             else

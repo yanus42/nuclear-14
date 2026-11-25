@@ -8,6 +8,9 @@
             proto: NearbyMeleeTargets
         - !type:HTNCompoundTask
           task: N14MeleeAttackTargetCompound
+    - tasks: # Forge-Change: resume the pre-encounter position after the combat branches fail.
+        - !type:HTNPrimitiveTask
+          operator: !type:NPCReturnFromEncounterOperator
 
 - type: htnCompound
   id: N14MeleeAttackTargetCompound

@@ -434,11 +434,12 @@ public sealed partial class PathfindingSystem
                 tilePolys.Clear();
 
                 var tile = _maps.GetTileRef(grid.Owner, grid.Comp, tilePos);
-                var flags = tile.Tile.IsEmpty ? PathfindingBreadcrumbFlag.Space : PathfindingBreadcrumbFlag.None;
+                var tileFlags = tile.Tile.IsEmpty ? PathfindingBreadcrumbFlag.Space : PathfindingBreadcrumbFlag.None;
                 // var isBorder = x < 0 || y < 0 || x == ChunkSize - 1 || y == ChunkSize - 1;
 
                 tileEntities.Clear();
                 var available = _lookup.GetLocalEntitiesIntersecting(tile, flags: LookupFlags.Dynamic | LookupFlags.Static);
+                var hasForgeBarrier = false; // Forge-Change: skip barrier geometry checks on ordinary tiles.
 
                 foreach (var ent in available)
                 {
@@ -451,13 +452,15 @@ public sealed partial class PathfindingSystem
 
                     var xform = _xformQuery.GetComponent(ent);
 
-                    if (xform.ParentUid != grid.Owner ||
-                        _maps.LocalToTile(grid.Owner, grid.Comp, xform.Coordinates) != tilePos)
+                    // Forge-Change: fixtures can extend into a neighboring tile, e.g. tall wooden barricades.
+                    // The lookup selects intersecting bodies; the fixture test below selects occupied samples.
+                    if (xform.ParentUid != grid.Owner)
                     {
                         continue;
                     }
 
                     tileEntities.Add(ent);
+                    hasForgeBarrier |= _doorQuery.HasComponent(ent) || HasComp<Content.Server.Storage.Components.EntityStorageComponent>(ent); // Forge-Change
                 }
 
                 for (var subX = 0; subX < SubStep; subX++)
@@ -469,6 +472,7 @@ public sealed partial class PathfindingSystem
 
                         // Subtile
                         var localPos = new Vector2(StepOffset + gridOrigin.X + x + (float) subX / SubStep, StepOffset + gridOrigin.Y + y + (float) subY / SubStep);
+                        var flags = tileFlags; // Forge-Change: keep climb and door flags with their occupied samples.
                         var collisionMask = 0x0;
                         var collisionLayer = 0x0;
                         var damage = 0f;
@@ -492,13 +496,23 @@ public sealed partial class PathfindingSystem
 
                                 // Do an AABB check first as it's probably faster, then do an actual point check.
                                 var intersects = false;
+                                var sample = localPos; // Forge-Change
 
                                 foreach (var proxy in fixture.Proxies)
                                 {
-                                    if (!proxy.AABB.Contains(localPos))
-                                        continue;
+                                    if (proxy.AABB.Contains(localPos))
+                                    {
+                                        sample = localPos;
+                                        intersects = true;
+                                        break;
+                                    }
 
-                                    intersects = true;
+                                    // Forge-Change: any thin solid fixture can fall between sample centers.
+                                    if (TrySampleThinForgeObstacle(proxy.AABB, localPos, out var obstacleSample))
+                                    {
+                                        sample = obstacleSample;
+                                        intersects = true;
+                                    }
                                 }
 
                                 if (!intersects ||
@@ -507,7 +521,7 @@ public sealed partial class PathfindingSystem
                                     continue;
                                 }
 
-                                if (!_fixtures.TestPoint(fixture.Shape, new Transform(xform.LocalPosition, xform.LocalRotation), localPos))
+                                if (!_fixtures.TestPoint(fixture.Shape, new Transform(xform.LocalPosition, xform.LocalRotation), sample)) // Forge-Change
                                 {
                                     continue;
                                 }
@@ -631,7 +645,17 @@ public sealed partial class PathfindingSystem
                     var polyData = points[x * SubStep + poly.Left, y * SubStep + poly.Bottom].Data;
 
                     var neighbors = new HashSet<PathPoly>();
-                    tilePoly.Add(new PathPoly(grid, chunk.Origin, GetIndex(x, y), box, polyData, neighbors));
+                    // Forge-Change: classify only collidable polygons while rebuilding the graph.
+                    var hasClimb = (polyData.Flags & PathfindingBreadcrumbFlag.Climb) != 0;
+                    var (obstacle, climbDelay) = (hasForgeBarrier || hasClimb) && (polyData.CollisionLayer != 0 || polyData.CollisionMask != 0)
+                        ? GetForgeObstacle(tileEntities, box) : (null, 0f);
+                    var barrier = obstacle is {} solid && (_doorQuery.HasComponent(solid) ||
+                        HasComp<Content.Server.Storage.Components.EntityStorageComponent>(solid)) ? obstacle : null;
+                    var climbObstacle = hasClimb && _climbableQuery.TryGetComponent(obstacle, out var climbable)
+                        ? climbable : null;
+                    tilePoly.Add(new PathPoly(grid, chunk.Origin, GetIndex(x, y), box, polyData, neighbors,
+                        barrier, CanOpenForgeBarrier(barrier), climbObstacle == null ? null : obstacle,
+                        climbDelay)); // Forge-Change
                 }
             }
         }

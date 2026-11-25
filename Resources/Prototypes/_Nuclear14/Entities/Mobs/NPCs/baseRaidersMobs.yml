@@ -27,7 +27,13 @@
       canOperate: false
     - type: HTN
       rootTask:
-        task: N14RangedHostileCompound
+        task: ForgeHumanoidCombatCompound # Forge-Change: witnessed hiding, then the existing combat plans.
+      blackboard: # Forge-Change: humanoid NPCs can cross tables and open doors/storage.
+        NavClimb: !type:Bool
+          true
+    - type: NPCBarrier # Forge-Change
+      openBarriers: true
+    - type: NPCCombatTactics # Forge-Change: weapon-aware movement and low-cover positions.
     - type: NPCRetaliation # Forge-Change: pursue players who damage NPCs from beyond vision range
       attackMemoryLength: 30 # Forge-Change
     - type: Carriable
@@ -116,6 +122,8 @@
   abstract: true
   suffix: AI
   components:
+    - type: NPCCombatTactics # Forge-Add
+      style: Skirmish
     - type: NpcFactionMember
       factions:
       - Raider
@@ -141,6 +149,11 @@
     - type: HTN
       rootTask:
         task: N14RangedHostileCompound
+      blackboard: # Forge-Change
+        NavClimb: !type:Bool
+          true
+    - type: NPCBarrier # Forge-Change
+      openBarriers: true
     - type: NPCRetaliation # Forge-Change: pursue players who damage NPCs from beyond vision range
       attackMemoryLength: 30 # Forge-Change
     - type: Carriable
@@ -221,6 +234,8 @@
   abstract: true
   suffix: AI
   components:
+    - type: NPCCombatTactics # Forge-Add
+      style: Skirmish
     - type: NpcFactionMember
       factions:
       - Raider
@@ -246,6 +261,11 @@
     - type: HTN
       rootTask:
         task: N14RangedHostileCompound
+      blackboard: # Forge-Change
+        NavClimb: !type:Bool
+          true
+    - type: NPCBarrier # Forge-Change
+      openBarriers: true
     - type: NPCRetaliation # Forge-Change: pursue players who damage NPCs from beyond vision range
       attackMemoryLength: 30 # Forge-Change
     - type: Carriable

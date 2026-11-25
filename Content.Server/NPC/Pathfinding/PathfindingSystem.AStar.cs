@@ -19,12 +19,20 @@ public sealed partial class PathfindingSystem
         }
 
         // TODO: Need partial planning that uses best node.
-        PathPoly? currentNode = null;
+        PathPoly currentNode;
 
         // First run
         if (!request.Started)
         {
+            var startNode = GetPoly(request.Start);
+            if (startNode == null)
+                return PathResult.NoPath;
+
+            currentNode = startNode;
             request.Frontier = new PriorityQueue<(float, PathPoly)>(PathPolyComparer);
+            // Forge-Change: enqueue the initial node once, even across updates.
+            request.Frontier.Add((0.0f, startNode));
+            request.CostSoFar[startNode] = 0.0f;
             request.Started = true;
         }
         // Re-validate nodes
@@ -53,17 +61,13 @@ public sealed partial class PathfindingSystem
         DebugTools.Assert(!request.Task.IsCompleted);
         request.Stopwatch.Restart();
 
-        var startNode = GetPoly(request.Start);
         var endNode = GetPoly(request.End);
 
-        if (startNode == null || endNode == null)
+        if (endNode == null)
         {
             return PathResult.NoPath;
         }
 
-        currentNode = startNode;
-        request.Frontier.Add((0.0f, startNode));
-        request.CostSoFar[startNode] = 0.0f;
         var count = 0;
         var arrived = false;
 

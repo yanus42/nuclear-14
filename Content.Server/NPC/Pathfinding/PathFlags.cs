@@ -29,4 +29,9 @@ public enum PathFlags : byte
     /// Can we open stuff that requires interaction (e.g. click-open doors).
     /// </summary>
     Interact = 1 << 4,
+
+    // Forge-Change: restricted to identified doors/storage, unlike generic Smashing.
+    OpenBarriers = 1 << 5,
+    BreakBarriers = 1 << 6,
+    RequireFloor = 1 << 7, // Forge-Change: reject empty tiles for return routes.
 }

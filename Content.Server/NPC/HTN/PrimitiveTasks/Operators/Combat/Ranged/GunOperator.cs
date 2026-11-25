@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Content.Server.NPC.Components;
+using Content.Server.NPC.Systems; // Forge-Change
 using Content.Shared.CombatMode;
 using Content.Shared.Mobs;
 using Content.Shared.Mobs.Components;
@@ -87,7 +88,9 @@ public sealed partial class GunOperator : HTNOperator, IHtnConditionalShutdown
         if (_entManager.TryGetComponent<NPCRangedCombatComponent>(owner, out var combat) &&
             blackboard.TryGetValue<EntityUid>(TargetKey, out var target, _entManager))
         {
-            combat.Target = target;
+            // Forge-Change: retarget an active MoveTo along with the gun operator.
+            if (combat.Target != target)
+                _entManager.System<NPCCombatSystem>().ChangeRangedTarget(owner, combat, target);
 
             // Success
             if (_entManager.TryGetComponent<MobStateComponent>(combat.Target, out var mobState) &&

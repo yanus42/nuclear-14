@@ -79,6 +79,7 @@
   parent: N14MobBaseSimple
   description: It's a dirty wasteland animal. Watch out for it's bite, it could be infectious.
   components:
+  - type: NPCBarrier # Forge-Change: bounded breaking of doors/storage during combat.
   - type: Hunger
     thresholds:
       Overfed: 200
@@ -157,6 +158,8 @@
   id: N14MobBaseHostileScaley
   parent: N14MobBaseHostile
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Skirmish
   - type: Damageable
     damageContainer: Biological
     damageModifierSet: N14Scale
@@ -172,6 +175,8 @@
   id: N14MobBaseHostileInsect
   parent: N14MobBaseHostile
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Skirmish
   - type: Damageable
     damageContainer: Biological
     damageModifierSet: N14Insect
@@ -232,6 +237,8 @@
   parent: N14MobBaseHostile
   description: A mean looking ghoul.
   components:
+  - type: NPCCombatTactics # Forge-Add
+    style: Skirmish
   - type: Damageable
     damageContainer: Biological
     damageModifierSet: GhoulNPC
